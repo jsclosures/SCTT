@@ -42,11 +42,11 @@ var mimeType = {
 
 //Lets define a port we want to listen to
 var PORT = 8180;
-var SOLRHOST = "autozone-dev.b.lucidworks.cloud";
+var SOLRHOST = "harcor.com";
 var SOLRPORT = 443;
 var SOLRCOLLECTION = "validate";
 var DEBUG = 0;
-var AUTHKEY = "c2VhcmNoX3N2YzpPVFUxWW1abE5tUXpPVE00";
+var AUTHKEY = "";
 var AUTHMODE = false;
 var LEADER = false;
 var LEADERCHECK = 1000;
