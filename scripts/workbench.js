@@ -2,9 +2,9 @@ function(oCommandLine){
 	function extractTest(commandLine){
 	var batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 12;
 	var sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 12;
-	var testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
+	var vehicleId= commandLine.hasOwnProperty('vehicleId') ? commandLine['vehicleId'] : '';
 	var sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
-
+        var testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
 	var sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
 	var sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
 	var sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
@@ -122,6 +122,24 @@ function(oCommandLine){
 			console.wslog("COMMIT");
 	  });
 	}
+
+	function getItemSourceId(doc,fieldStr){
+		let result = "";
+
+		let fieldList = fieldStr.split(",");
+
+		for(let fi in fieldList){
+			if( fi > 0 )
+				result += "-";
+
+			result += doc[fieldList[fi]];
+		}
+
+		if( !result )
+			result = doc.id;
+
+		return( result );
+	}
 	 
 	function queryCallback(res) {
 	  let str = "";
@@ -190,12 +208,13 @@ function(oCommandLine){
 				for(let i = 0;i < docList.length;i++){
 					if( i > 0 )
 						buffer += ",";
-					
-					buffer += docList[i][sourceSolrIdField] ? docList[i][sourceSolrIdField] : docList[i].id;
+					let sourceFieldTxt = getItemSourceId(docList[i],sourceSolrIdField);
+
+					buffer += sourceFieldTxt;
 					
 					let newDocDetail = {
-										"id": validateSolrType + doc[sourceSolrIdField] + i,
-										"parentid": doc[sourceSolrIdField],
+										"id": validateSolrType + sourceFieldTxt + i,
+										"parentid": sourceFieldTxt,
 										"query_txt": doc[validateSolrField],
 										testname: doc["testname"],
 										languageid: doc["languageid"],
@@ -249,7 +268,7 @@ function(oCommandLine){
 				"recordsPerPage": batchSize,
 				"searchText": doc["query_txt"]
 			};
-			//let payload  = {"country": "USA","customerType": "B2C","deviceType": "app","ignoreVehicleSpecificProductsCheck": false,"isVehicleSpecific": false,"keywordSearchVisual": false,"pageNumber": 1,"preview": false,"recordsPerPage": batchSize,"salesChannel": "ECOMM","searchText": doc["query_txt"],"storeId": 6029,"vehicleId": 0};
+			//let payload  = {"country": "USA","customerType": "B2C","deviceType": "app","ignoreVehicleSpecificProductsCheck": false,"isVehicleSpecific": false,"keywordSearchVisual": false,"pageNumber": 1,"preview": false,"recordsPerPage": batchSize,"salesChannel": "ECOMM","searchText": doc["query_txt"],"storeId": 6029,"vehicleId": vehicleId};
 			//console.wslog(tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			let conf = {hostname: sourceSolrHost,port: sourceSolrPort,path: "/v1/products/search",method: 'POST',headers: headers};
@@ -299,7 +318,7 @@ function(oCommandLine){
 	function truncateResults(writeMode,callback){
 		if( writeMode == "truncate" ){
 			let tCallback = callback.bind({});
-			let payload = {"delete": {"query": "contenttype:" + validateSolrType + "+AND+testname:" + testName}};
+			let payload = {"delete": {"query": "contenttype:" + validateSolrType}};
 			let tValidateSolrPath = validateSolrUpdatePath + "?commit=true";
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
@@ -346,8 +365,8 @@ var doFinally = function(){
 					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 	}
 	var sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-						sourceSolrHost: "product-discovery-browse-search-bs-st.apps.nonprod.mem.cloud.autozone.com",
-						sourceSolrIdField: "itemDescription",
+						sourceSolrHost: "harcor.com",
+						sourceSolrIdField: "partTypeName,itemDescription",
 						sourceMode: "AZ",
 						sourceSolrPort: 443,
 						sourceSolrCollection: "autzone",
@@ -363,9 +382,9 @@ var doFinally = function(){
 }
 
 var sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-					sourceSolrIdField: "itemDescription",
+					sourceSolrIdField: "partTypeName,itemDescription",
 					sourceMode: "AZ",
-					sourceSolrHost: "product-discovery-browse-search-bs.apps.prod.mem.cloud.autozone.com",
+					sourceSolrHost: "harcor.com",
 					sourceSolrPort: 443,
 					sourceSolrCollection: "",
 					validateSolrType:"AFTER",
