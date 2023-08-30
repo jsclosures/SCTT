@@ -13,7 +13,11 @@ http://localhost:8983/solr/admin/collections?action=CREATE&name=validate&collect
 
 Start the node server
 
+cd node
+
 node ./server.js  OPTIONS
+
+ie:  node server.js debug=11 solrhost=solrhost authkey=authkey
 
 OPTIONS
 
