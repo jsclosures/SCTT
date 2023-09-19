@@ -15,11 +15,11 @@ var Buffer = require("buffer").Buffer;
 var getHandlers = require("./handlers.js").getHandlers;
 var HANDLERS = getHandlers();
 
-var nock = require('nock');
+/*var nock = require('nock');
 
 nock.recorder.rec({
   output_objects: true
-});
+});*/
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -419,7 +419,7 @@ function actualHandleRequest(request, response, bodyData) {
 					if (resp && resp.payload && resp.headers) {
 						for (let h in resp.headers) {
 							response.setHeader(resp.headers[h].name, resp.headers[h].value);
-							writeLog(1, "set header");
+							//writeLog(1, "set header");
 						}
 						parsedResponse = resp.payload;
 

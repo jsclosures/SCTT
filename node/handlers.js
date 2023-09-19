@@ -163,18 +163,21 @@ var HANDLERS = {
 		let CONTEXT = args.CONTEXT;
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
-		let solrPath = "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?q=query_txt:%s&wt=json&indent=on";
+		let solrPath = "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
 		let contentType = "SUMMARY";
 		if (args.queryObj.headeronly) {
 			contentType = "SUMMARYHEADER";
 			solrPath = "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
 		}
 
-		solrPath += "&fq=contenttype:*" + contentType;
-
+		solrPath += "&fq=contenttype:" + contentType;
+		console.log("query",args.queryObj);
 		let input = "*";
-		if (args.queryObj.query_txt)
-			input = args.queryObj.query_txt + '*';
+		if (args.queryObj.query_s)
+			input = args.queryObj.query_s;
+
+		solrPath += "&fq=query_txt:(" + input.split(" ").join("+AND+") + "*)";
+
 		let testName = "default";
 
 		if (args.queryObj.testname)
@@ -212,7 +215,7 @@ var HANDLERS = {
 			});
 
 			res.on('end', function () {
-				console.log("sample complete", str);
+				//console.log("sample complete", str);
 				try {
 					let data = JSON.parse(str);
 					if (data.response && data.response.docs) {
@@ -287,7 +290,7 @@ var HANDLERS = {
 				});
 
 				res.on('end', function () {
-					if (CONTEXT.DEBUG > 0) console.log("sample complete", str);
+					//if (CONTEXT.DEBUG > 0) console.log("sample complete", str);
 					try {
 						let data = JSON.parse(str);
 						if (data.response && data.response.docs) {
@@ -344,11 +347,14 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=query_txt:%s&fq=contenttype:SEARCH&wt=json&indent=on";
+		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=contenttype:SEARCH&wt=json&indent=on";
 
-		let input = "*";
-		if (args.queryObj.query_txt)
-			input = args.queryObj.query_txt + '*';
+		let input = "";
+		if (args.queryObj.query_s)
+			input = args.queryObj.query_s;
+
+		solrPath += "&fq=query_txt:(" + input.split(" ").join("+AND+") + "*)";
+
 		let testName = "default";
 
 		if (args.queryObj.testname)
@@ -383,7 +389,7 @@ var HANDLERS = {
 			});
 
 			res.on('end', function () {
-				if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
+				//if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
 				try {
 					let data = JSON.parse(str);
 					if (data.response && data.response.docs) {
@@ -457,7 +463,7 @@ var HANDLERS = {
 				});
 
 				res.on('end', function () {
-					if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
+					if (CONTEXT.DEBUG > 1) console.log("", str);
 					try {
 						let data = JSON.parse(str);
 						if (data.response && data.response.docs) {
@@ -600,7 +606,7 @@ var HANDLERS = {
 				});
 
 				res.on('end', function () {
-					if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
+					//if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
 					let data = {};
 
 					try {
@@ -760,7 +766,7 @@ var HANDLERS = {
 			});
 
 			res.on('end', function () {
-				if (CONTEXT.DEBUG > 0) console.log("sample complete", str);
+				//if (CONTEXT.DEBUG > 0) console.log("sample complete", str);
 				let data = JSON.parse(str);
 				if (data.response && data.response.docs) {
 					let docs = data.response.docs;
@@ -1279,7 +1285,7 @@ var HANDLERS = {
 				});
 
 				res.on('end', function () {
-					if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
+					//if (CONTEXT.DEBUG > 1) console.log("sample complete", str);
 					let data = {};
 
 					try {

@@ -73,7 +73,7 @@ function internalBuildSamplePage(parentId,pageId) {
     var GRIDCOLUMNS = [
     {
         name : uiManager.getString("query_txt"),
-        field : 'query_txt',
+        field : 'query_s',
         width : '60%'
     },
     {
@@ -195,7 +195,7 @@ function internalBuildSamplePage(parentId,pageId) {
 	        allowNoTrailingSlash: true,
 	        gridName: context.gridName,
 	        contenttype: CONTENTTYPE,
-	        defaultfield: "query_txt"
+	        defaultfield: "query_s"
 	    };
    
     context.saveAction = function(e,oldRec,newRec)
@@ -264,8 +264,8 @@ function internalBuildSamplePage(parentId,pageId) {
     context.getQueryStr = function(target)
     {    
 	    let result = {};
-		if( target && target.query_txt ){
-			result.query_txt = target.query_txt;
+		if( target && target.query_s ){
+			result.query_s = target.query_s;
 		}
 		
 		let test = getCurrentContext().getCurrentTest().test;

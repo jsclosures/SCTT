@@ -98,7 +98,7 @@ function(commandLine){
         let matchscorelist = doc["matchscorelist"];
         let differencescore = doc["differencescore"];
         let countscore = doc["countscore"];
-        if( ctx.offset > 0 )
+        if( ctx.offset > 1 )
             ctx.buffer += "\n";
         
         ctx.buffer += doc.query_txt  + "," + rowcount + "," + rowcounta + "," + rowcountb + "," + topdocafter + "," + topdocbefore;
@@ -123,7 +123,7 @@ function(commandLine){
     function doComplete(ctx){
         if( commandLine.callback ){
             console.log("do complete callback");
-            commandLine.callback(ctx.buffer);
+            commandLine.callback({payload: ctx.buffer,headers: [{name: "Content-Type",value: "application/csv"}]});
         }
     }
     

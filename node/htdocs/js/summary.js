@@ -74,9 +74,9 @@ var context = {};
 	
 	{
         label: uiManager.getString("query_txt"),
-        id: mainId + 'query_txt',
-        name: mainId + 'query_txt',
-        dataname: 'query_txt',
+        id: mainId + 'query_s',
+        name: mainId + 'query_s',
+        dataname: 'query_s',
         type: 'TEXTBOX',
         integrated: true
     },
@@ -93,8 +93,8 @@ var context = {};
     
     var GRIDCOLUMNS = [
     {
-        name : uiManager.getString("query_txt"),
-        field : 'query_txt',
+        name : uiManager.getString("query_s"),
+        field : 'query_s',
         width : '55%'
     },
     {
@@ -196,7 +196,7 @@ var context = {};
 	        allowNoTrailingSlash: true,
 	        gridName: context.gridName,
 	        contenttype: CONTENTTYPE,
-	        defaultfield: "query_txt"
+	        defaultfield: "query_s"
 	    };
     
     context.gridRowClick = function(e)
@@ -207,8 +207,8 @@ var context = {};
     context.getQueryStr = function(target)
     {    
 	    let result = {};
-		if( target && target.query_txt ){
-			result.query_txt = target.query_txt;
+		if( target && target.query_s ){
+			result.query_s = target.query_s;
 		}
 		
 		let test = getCurrentContext().getCurrentTest().test;

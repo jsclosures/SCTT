@@ -365,7 +365,7 @@ var doFinally = function(){
 					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 	}
 	var sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-						sourceSolrHost: "harcor.com",
+						sourceSolrHost: "product-discovery-browse-search-bs-st.apps.nonprod.mem.cloud.autozone.com",
 						sourceSolrIdField: "partTypeName,itemDescription",
 						sourceMode: "AZ",
 						sourceSolrPort: 443,
@@ -384,7 +384,7 @@ var doFinally = function(){
 var sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 					sourceSolrIdField: "partTypeName,itemDescription",
 					sourceMode: "AZ",
-					sourceSolrHost: "harcor.com",
+					sourceSolrHost: "product-discovery-browse-search-bs.apps.prod.mem.cloud.autozone.com",
 					sourceSolrPort: 443,
 					sourceSolrCollection: "",
 					validateSolrType:"AFTER",
