@@ -249,14 +249,14 @@ var context = {};
                 let a = document.createElement("a");
                 a.style.display = "none";
                 document.body.appendChild(a);
-                let type = "text/plain";
+                let type = "application/csv";
                 // Set the HREF to a Blob representation of the data to be downloaded
                 a.href = window.URL.createObjectURL(
                     new Blob([data], { type })
                 );
 
                 // Use download attribute to set set desired file name
-                a.setAttribute("download", test.testname + "csv");
+                a.setAttribute("download", test.testname + ".csv");
 
                 // Trigger the download by simulating click
                 a.click();
@@ -271,7 +271,7 @@ var context = {};
                         payload.contenttype = "RUNNER";
                         payload.action = "GET";
                         dataService["post"](payload, payload,"text",{
-                            "Content-Type" : "text/plain",
+                            "Content-Type" : "application/csv",
                             "Accept" : "text/plain"
                         });
         }
