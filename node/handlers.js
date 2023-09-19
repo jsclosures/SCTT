@@ -38,6 +38,33 @@ var HANDLERS = {
 
 		return (result);
 	},
+	"ASSETRUNNER": function (args) {
+		let result = { status: 1, message: "HANDLED" };
+		let CONTEXT = args.CONTEXT;
+
+		let assetName = args.queryObj.assetname;
+		args.assetName = assetName;
+		args.testName = args.queryObj.testname;
+
+		let getCallback = function (asset) {
+			//console.log(test);
+
+			let scriptToExecute = false;
+
+			let script = CONTEXT.lib.Buffer.from(asset.assetscript, 'base64');
+
+			eval('scriptToExecute = ' + script + ";");
+
+			let sendArgs = this.args;
+
+			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
+
+			scriptToExecute(sendArgs);
+		};
+		CONTEXT.lib.loadAsset(assetName, getCallback.bind({ args: args }),"script");
+
+		return (result);
+	},
 	"BUILD": function (args) {
 		let result = { status: 1, message: "HANDLED" };
 		let CONTEXT = args.CONTEXT;
@@ -99,6 +126,8 @@ var HANDLERS = {
 				}*/
 
 				let script = test[this.type];
+
+				console.log(script);
 
 				eval('scriptToExecute = ' + script + ";");
 

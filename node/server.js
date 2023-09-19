@@ -717,7 +717,7 @@ function loadAsset(assetName, callback, assetType) {
 	t.end();
 }
 
-CONTEXT.lib.loadTest = loadAsset;
+CONTEXT.lib.loadAsset = loadAsset;
 
 function loadTest(testName, callback, testType,encoded) {
 

@@ -49,7 +49,8 @@ var editorTabList = [
         {name: mainId + "testbuildscript",label: uiManager.getString("testbuildscript"),dataname: "testbuildscript"},
                     {name: mainId + "testextractscript",label: uiManager.getString("testextractscript"),dataname: "testextractscript"},
                     {name: mainId + "testinterpretscript",label: uiManager.getString("testinterpretscript"),dataname: "testinterpretscript"},
-                    {name: mainId + "testsummaryscript",label: uiManager.getString("testsummaryscript"),dataname: "testsummaryscript"}];
+                    {name: mainId + "testsummaryscript",label: uiManager.getString("testsummaryscript"),dataname: "testsummaryscript"},
+                    {name: mainId + "testsummaryextractscript",label: uiManager.getString("testsummaryextractscript"),dataname: "testsummaryextractscript"}];
 
 function enableEditorTabs(mode){
     for(let i in editorTabList){
@@ -275,6 +276,8 @@ var CONTENTTYPE = "TEST";
                 rec.testbuildscript = atob(rec.testbuildscript);
             if( rec.testsummaryscript )
                 rec.testsummaryscript = atob(rec.testsummaryscript);
+            if( rec.testsummaryextractscript )
+                rec.testsummaryextractscript = atob(rec.testsummaryextractscript);
             if( rec.testnotes )
                 rec.testnotes = atob(rec.testnotes);
             if( rec.testdetailscript )
@@ -319,6 +322,8 @@ var CONTENTTYPE = "TEST";
 				newRec.testbuildscript = btoa(newRec.testbuildscript);
 			if( newRec.testsummaryscript )
 				newRec.testsummaryscript = btoa(newRec.testsummaryscript);
+            if( newRec.testsummaryextractscript )
+				newRec.testsummaryextractscript = btoa(newRec.testsummaryextractscript);
             if( newRec.testnotes )
 				newRec.testnotes = btoa(newRec.testnotes);
             
@@ -378,6 +383,8 @@ var CONTENTTYPE = "TEST";
                 newTarget.testbuildscript = btoa(newRec.testbuildscript);
 			if( newRec.testsummaryscript )
                 newTarget.testsummaryscript = btoa(newRec.testsummaryscript);
+            if( newRec.testsummaryextractscript )
+                newTarget.testsummaryextractscript = btoa(newRec.testsummaryextractscript);
             if( newRec.testnotes )
                 newTarget.testnotes = btoa(newRec.testnotes);
             if( newRec.testdetailscript )

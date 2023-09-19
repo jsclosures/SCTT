@@ -78,6 +78,7 @@
 		"testArgs": "Arguments",
 		"runScript": "Run",
         "testsummaryscript": "Summarize Results",
+        "testsummaryextractscript": "Summary Extract",
         "resultsTabName": "Test Results",
         "updatememoryTabNameA": "Memory Update A",
         "updatememoryTabNameB": "Memory Update B",
@@ -122,7 +123,10 @@
         "pageMetricStart": "Start",
         "pageMetricPrevious": "Previous",
         "pageMetricNext": "Next",
-        "collectMetrics": "Collect"
+        "collectMetrics": "Collect",
+        "rowcounta": "Prod",
+        "rowcountb": "Pre",
+        "rowcount": "Delta"
 },
 "help": {
     "login": "Please use your username and password to login.",

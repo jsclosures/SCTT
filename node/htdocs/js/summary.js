@@ -267,8 +267,8 @@ var context = {};
             };
 
             var dataService = getDataService(restURL, callback, "", "");
-                        var payload = {testname: test.testname};
-                        payload.contenttype = "DOWNLOADSUMMARY";
+                        var payload = {testname: test.testname,type: "testsummaryextractscript",input: "testName=" + test.testname};
+                        payload.contenttype = "RUNNER";
                         payload.action = "GET";
                         dataService["post"](payload, payload,"text",{
                             "Content-Type" : "text/plain",
