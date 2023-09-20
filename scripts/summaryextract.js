@@ -11,7 +11,7 @@ function(commandLine){
     
     var cursorMark = "*";
     var queryCount = 0;
-    const LOOPCTX = {offset: 0,docs: [],size: 0,buffer: "query,rowcount,rowcounta,rowcountb,topdocafter,topdocbefore\n"}; 
+    const LOOPCTX = {offset: 0,docs: [],size: 0,buffer: "query,environment,delta,rowcount,doc\n"}; 
     
     function loopResults(){
         let ctx = this.ctx;
@@ -82,7 +82,7 @@ function(commandLine){
     
     function validateQuery(doc,hasMore,ctx){
         let tCallback = rowCallback.bind({queryDoc: doc,hasMore: hasMore,ctx});
-        console.log(doc);
+        //console.log(doc);
                 
         let rowcountbefore = doc["rowcountbefore"];
         let rowcountafter = doc["rowcountafter"];
@@ -92,17 +92,47 @@ function(commandLine){
         let rowcountb = doc["rowcountb"];
         let rowcounta = doc["rowcounta"];
         let rowcount = doc["rowcount"];
-        let topdocbefore = doc["topdocbefore"];
-        let topdocafter = doc["topdocafter"];
         let matchscore = doc["matchscore"];
         let matchscorelist = doc["matchscorelist"];
         let differencescore = doc["differencescore"];
         let countscore = doc["countscore"];
+
         if( ctx.offset > 1 )
             ctx.buffer += "\n";
-        
-        ctx.buffer += doc.query_txt  + "," + rowcount + "," + rowcounta + "," + rowcountb + "," + topdocafter + "," + topdocbefore;
 
+        let topdocbefore = doc["topdocbefore"];
+        if( topdocbefore && topdocbefore.indexOf("~") ){
+            let docs = topdocbefore.split("~");
+            let buffer = "";
+            for(let recStr of docs){
+                if( buffer.length > 0 ){
+                    buffer += "\n";
+                }
+                buffer += doc.query_txt  + "," + "PREPROD" + "," + rowcount + "," + rowcountb  + "," + recStr.replaceAll("::",",");
+            }
+            ctx.buffer += buffer + "\n";
+        }
+        else {
+            buffer += doc.query_txt  + "," + "PREPROD" + "," + rowcount + "," + rowcountb  + "," + topdocbefore;
+            ctx.buffer += buffer + "\n";
+        }
+
+        let topdocafter = doc["topdocafter"];
+        if( topdocafter && topdocafter.indexOf("~") ){
+            let docs = topdocafter.split("~");
+            let buffer = "";
+            for(let recStr of docs){
+                if( buffer.length > 0 ){
+                    buffer += "\n";
+                }
+                buffer += doc.query_txt  + "," + "PROD" + "," + rowcount + "," + rowcounta  + "," + recStr.replaceAll("::",",");
+            }
+            ctx.buffer += buffer;
+        }
+        else {
+            buffer += doc.query_txt  + "," + "PROD" + "," + rowcount + "," + rowcounta  + "," + topdocafter;
+        }
+        
         tCallback();
     }
     

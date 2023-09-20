@@ -127,7 +127,7 @@ var HANDLERS = {
 
 				let script = test[this.type];
 
-				console.log(script);
+				//console.log(script);
 
 				eval('scriptToExecute = ' + script + ";");
 
@@ -171,7 +171,7 @@ var HANDLERS = {
 		}
 
 		solrPath += "&fq=contenttype:" + contentType;
-		console.log("query",args.queryObj);
+		//("query",args.queryObj);
 		let input = "*";
 		if (args.queryObj.query_s)
 			input = args.queryObj.query_s;
