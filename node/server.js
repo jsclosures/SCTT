@@ -1,19 +1,19 @@
-var http = require('http');
-var https = require('https');
-var fs = require('fs');
-var path = require('path');
-var readline = require('readline');
-var url = require('url');
-var stream = require('stream');
-var zlib = require('zlib');
-//var SSH2Client = require('ssh2-sftp-client'); 
-//var SSHClient = require('ssh2'); 
-var WebSocketServer = require('websocket').server;
-var utf8 = require("utf8");
-var Buffer = require("buffer").Buffer;
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+const url = require('url');
+const stream = require('stream');
+const zlib = require('zlib');
+//const SSH2Client = require('ssh2-sftp-client'); 
+//const SSHClient = require('ssh2'); 
+const WebSocketServer = require('websocket').server;
+const utf8 = require("utf8");
+const Buffer = require("buffer").Buffer;
 
-var getHandlers = require("./handlers.js").getHandlers;
-var HANDLERS = getHandlers();
+const getHandlers = require("./handlers.js").getHandlers;
+const HANDLERS = getHandlers();
 
 /*var nock = require('nock');
 
@@ -23,7 +23,7 @@ nock.recorder.rec({
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-var mimeType = {
+const mimeType = {
 	'.ico': 'image/x-icon',
 	'.html': 'text/html',
 	'.js': 'text/javascript',
@@ -45,6 +45,7 @@ var PORT = 8180;
 var SOLRHOST = "harcor.com";
 var SOLRPORT = 443;
 var SOLRCOLLECTION = "validate";
+var DOCUMENTROOT = "./";
 var DEBUG = 0;
 var AUTHKEY = "";
 var AUTHMODE = false;
@@ -86,6 +87,8 @@ if (Object.prototype.hasOwnProperty.call(commandLine, "solrhost"))
 	SOLRHOST = commandLine.solrhost;
 if (Object.prototype.hasOwnProperty.call(commandLine, "solrport"))
 	SOLRPORT = parseInt(commandLine.solrport);
+if (Object.prototype.hasOwnProperty.call(commandLine, "documentroot"))
+	DOCUMENTROOT = commandLine.documentroot;
 if (Object.prototype.hasOwnProperty.call(commandLine, "solrcollection"))
 	SOLRCOLLECTION = commandLine.solrcollection;
 if (Object.prototype.hasOwnProperty.call(commandLine, "debug"))
@@ -109,11 +112,12 @@ if (Object.prototype.hasOwnProperty.call(commandLine, "worker"))
 else
 	WORKER = WORKER + new Date().getTime();
 
-var CONTEXT = {
+const CONTEXT = {
 	commandLine: commandLine,
 	PORT: PORT,
 	SOLRHOST: SOLRHOST,
 	SOLRPORT: SOLRPORT,
+	DOCUMENTROOT: DOCUMENTROOT,
 	SOLRCOLLECTION: SOLRCOLLECTION,
 	DEBUG: DEBUG,
 	AUTHKEY: AUTHKEY,
@@ -279,6 +283,14 @@ function parseCookies(request) {
 	});
 
 	return list;
+}
+
+function fileUnderRoot(context,fileName){
+	let filePath = context.lib.path.resolve(fileName);
+	let directoryPath = context.lib.path.resolve(context.DOCUMENTROOT);
+
+
+	return( filePath.startsWith(directoryPath) );
 }
 
 function handleRequest(request, response) {
@@ -453,31 +465,33 @@ function actualHandleRequest(request, response, bodyData) {
 	else {
 		pathname = "./htdocs" + pathname;
 
-		fs.exists(pathname, function (exist) {
-			if (!exist) {
-				// if the file is not found, return 404
-				response.statusCode = 404;
-				response.end(`File ${pathname} not found!`);
-				return;
-			}
-			// if is a directory, then look for index.html
-			if (fs.statSync(pathname).isDirectory()) {
-				pathname += '/index.html';
-			}
-			// read file from file system
-			fs.readFile(pathname, function (err, data) {
-				if (err) {
-					response.statusCode = 500;
-					response.end(`Error getting the file: ${err}.`);
-				} else {
-					// based on the URL path, extract the file extention. e.g. .js, .doc, ...
-					const ext = path.parse(pathname).ext;
-					// if the file is found, set Content-type and send data
-					response.setHeader('Content-type', mimeType[ext] || 'text/plain');
-					response.end(data);
+		if( fileUnderRoot(CONTEXT,pathname) ){
+			fs.exists(pathname, function (exist) {
+				if (!exist) {
+					// if the file is not found, return 404
+					response.statusCode = 404;
+					response.end(`File ${pathname} not found!`);
+					return;
 				}
+				// if is a directory, then look for index.html
+				if (fs.statSync(pathname).isDirectory()) {
+					pathname += '/index.html';
+				}
+				// read file from file system
+				fs.readFile(pathname, function (err, data) {
+					if (err) {
+						response.statusCode = 500;
+						response.end(`Error getting the file: ${err}.`);
+					} else {
+						// based on the URL path, extract the file extention. e.g. .js, .doc, ...
+						const ext = path.parse(pathname).ext;
+						// if the file is found, set Content-type and send data
+						response.setHeader('Content-type', mimeType[ext] || 'text/plain');
+						response.end(data);
+					}
+				});
 			});
-		});
+		}
 	}
 
 

@@ -974,7 +974,8 @@ var HANDLERS = {
 			try {
 				let scriptToExecute = false;
 
-				let script = CONTEXT.lib.Buffer.from(test[this.type], 'base64');
+				//let script = CONTEXT.lib.Buffer.from(test[this.type], 'base64');
+				let script = test[this.type];
 
 				eval('scriptToExecute = ' + script + ";");
 
@@ -990,7 +991,7 @@ var HANDLERS = {
 				if (CONTEXT.DEBUG > 0) console.log("exception running script", ee);
 			}
 		};
-		CONTEXT.lib.loadTest(testName, getTestCallback.bind({ args: args, type: testType, name: testName }));
+		CONTEXT.lib.loadTest(testName, getTestCallback.bind({ args: args, type: testType, name: testName }),testType);
 
 		return (result);
 	},
