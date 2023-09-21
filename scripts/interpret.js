@@ -13,6 +13,19 @@ function(commandLine){
       };
   }
   
+  function getSectionTitle(allData,source,aList){
+      let sourceValue = allData[source].source;
+      let sourceKey = source;
+  
+      if( aList && aList.length > 0 ){
+         sourceKey = aList[0].id.indexOf("BEFORE") > -1 ? "B" : "A";
+      }
+      let result = "<b>" + sourceKey + "</B>: " + sourceValue;
+      result = result.replaceAll(",","-");
+  
+      return( result );
+  }
+  
   function connectWithLine(div1, div2, color, thickness) { // draw a line connecting elements
       var off1 = getOffset(div1);
       var off2 = getOffset(div2);
@@ -142,11 +155,11 @@ function(commandLine){
                           console.log("index",i);
                                   
                               if( i == 0 ){
-                                  aDocWidget = WIDGETFACTORY.buildWidget({which:"div",innerHTML: aList.length + (aList.length > 0 ? " docs found in " + allData[sourceA].source : "") });
+                                  aDocWidget = WIDGETFACTORY.buildWidget({which:"div",innerHTML: getSectionTitle(allData,sourceA,aList) });
                                   console.log("adoc",aDocWidget);
                                   WIDGETFACTORY.addWidgetToContainer({parent: allData[sourceA].resultPanel,child: aDocWidget});
                                   
-                                  bDocWidget = WIDGETFACTORY.buildWidget({which:"div",innerHTML: bList.length + (bList.length > 0 ? " docs found in " + allData[sourceB].source : "") });
+                                  bDocWidget = WIDGETFACTORY.buildWidget({which:"div",innerHTML: getSectionTitle(allData,sourceB,bList) });
                                   
                                   WIDGETFACTORY.addWidgetToContainer({parent: allData[sourceB].resultPanel,child: bDocWidget});
                               }
@@ -189,7 +202,7 @@ function(commandLine){
                                               aList[i]["_topdocwidget"] = [];
                                               let docListWidget = WIDGETFACTORY.buildWidget({which:"ul",style: {"background-color": leftColor}});
                                               WIDGETFACTORY.addWidgetToContainer({parent: entryWidgetA,child: docListWidget});
-                                              dList = dList.split(",");
+                                              dList = dList.split("~");
                                               aList[i]["_topdoc"] = dList;
                                               for(let di in dList){
                                                   let docItemWidget = WIDGETFACTORY.buildWidget({which:"li",innerHTML: dList[di]});
@@ -220,7 +233,7 @@ function(commandLine){
                                           if( dList ){
                                               let docListWidget = WIDGETFACTORY.buildWidget({which:"ul",style: {"background-color": rightColor}});
                                               WIDGETFACTORY.addWidgetToContainer({parent: entryWidgetB,child: docListWidget});
-                                              dList = dList.split(",");
+                                              dList = dList.split("~");
                                               bList[i]["_topdoc"] = dList;
                                               bList[i]["_topdocwidget"] = [];
                                               for(let di in dList){
