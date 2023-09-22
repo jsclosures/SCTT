@@ -639,6 +639,7 @@ function getRESTData(args) {
 				else if (args.type == 'query') {
 					let docData = { items: [] };
 					let docs = data.response.docs;
+					docData._totalItems = data.response.numFound;
 					for (let i in docs) {
 						docData.items.push({ id: args.entry.label, value: docs[i][args.entry.field] });
 					}
