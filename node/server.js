@@ -492,6 +492,10 @@ function actualHandleRequest(request, response, bodyData) {
 				});
 			});
 		}
+		else {
+			response.setHeader('Content-type','text/plain');
+			response.end(data);
+		}
 	}
 
 
