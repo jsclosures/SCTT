@@ -365,11 +365,11 @@ var doFinally = function(){
 					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 	}
 	var sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-						sourceSolrHost: "product-discovery-browse-search-bs-st.apps.nonprod.mem.cloud.autozone.com",
+						sourceSolrHost: "",
 						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
 						sourceMode: "AZ",
 						sourceSolrPort: 443,
-						sourceSolrCollection: "autzone",
+						sourceSolrCollection: "",
 						validateSolrType:"BEFORE",
 						AUTHKEY: CONTEXT.AUTHKEY
 					};
@@ -384,7 +384,7 @@ var doFinally = function(){
 var sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
 					sourceMode: "AZ",
-					sourceSolrHost: "product-discovery-browse-search-bs.apps.prod.mem.cloud.autozone.com",
+					sourceSolrHost: "",
 					sourceSolrPort: 443,
 					sourceSolrCollection: "",
 					validateSolrType:"AFTER",
