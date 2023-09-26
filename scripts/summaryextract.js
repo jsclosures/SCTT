@@ -11,7 +11,7 @@ function(commandLine){
     
     var cursorMark = "*";
     var queryCount = 0;
-    const LOOPCTX = {offset: 0,docs: [],size: 0,buffer: "query,environment,delta,rowcount,doc\n"}; 
+    const LOOPCTX = {offset: 0,docs: [],size: 0,buffer: "query,environment,delta,rowcount,doc"}; 
     
     function loopResults(){
         let ctx = this.ctx;
@@ -97,41 +97,43 @@ function(commandLine){
         let differencescore = doc["differencescore"];
         let countscore = doc["countscore"];
 
-        if( ctx.offset > 1 )
+        if( ctx.offset > 0 )
             ctx.buffer += "\n";
-
+        let buffer = "";
         let topdocbefore = doc["topdocbefore"];
         if( topdocbefore && topdocbefore.indexOf("~") ){
             let docs = topdocbefore.split("~");
-            let buffer = "";
             for(let recStr of docs){
                 if( buffer.length > 0 ){
                     buffer += "\n";
                 }
                 buffer += doc.query_txt  + "," + "PREPROD" + "," + rowcount + "," + rowcountb  + "," + recStr.replaceAll("::",",");
             }
-            ctx.buffer += buffer + "\n";
         }
         else {
-            buffer += doc.query_txt  + "," + "PREPROD" + "," + rowcount + "," + rowcountb  + "," + topdocbefore;
-            ctx.buffer += buffer + "\n";
+            buffer += doc.query_txt  + "," + "PREPROD" + "," + rowcount + "," + rowcountb  + "," + topdocbefore;   
         }
 
+        ctx.buffer += buffer;
+        ctx.buffer += "\n";
+
+        buffer = "";
         let topdocafter = doc["topdocafter"];
         if( topdocafter && topdocafter.indexOf("~") ){
             let docs = topdocafter.split("~");
-            let buffer = "";
+            
             for(let recStr of docs){
                 if( buffer.length > 0 ){
                     buffer += "\n";
                 }
                 buffer += doc.query_txt  + "," + "PROD" + "," + rowcount + "," + rowcounta  + "," + recStr.replaceAll("::",",");
             }
-            ctx.buffer += buffer;
         }
         else {
             buffer += doc.query_txt  + "," + "PROD" + "," + rowcount + "," + rowcounta  + "," + topdocafter;
         }
+
+        ctx.buffer += buffer;
         
         tCallback();
     }
