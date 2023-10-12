@@ -1040,6 +1040,7 @@
   <field name="testbuildscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
   <field name="testcopyscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
   <field name="testdetailscript" type="binary" indexed="false" stored="true"/>
+  <field name="testsummaryextractscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
   <field name="testextractscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
   <field name="testharvestscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
   <field name="testinterpretscript" type="binary" multiValued="false" indexed="false" required="false" stored="true"/>
