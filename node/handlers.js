@@ -176,7 +176,7 @@ var HANDLERS = {
 		if (args.queryObj.query_s)
 			input = args.queryObj.query_s;
 
-		solrPath += "&fq=query_txt:(" + input.split(" ").join("+AND+") + "*)";
+		solrPath += "&fq=query_txt:(" + input.split(" ").join("+AND+") + ")";
 
 		let testName = "default";
 
@@ -186,13 +186,13 @@ var HANDLERS = {
 		if (testName) {
 			solrPath += "&fq=testname:" + testName;
 		}
+		let rows = args.queryObj._rows ? args.queryObj._rows : 10;
+		solrPath += '&rows=' + rows;
 
+		let start = args.queryObj  && args.queryObj._start ? args.queryObj._start : 0;
+		solrPath += '&start=' + (rows * start);
 
-		if (args.queryObj._start)
-			solrPath += '&start=' + args.queryObj._start;
-
-		if (args.queryObj._rows)
-			solrPath += '&rows=' + (2 * args.queryObj._rows);
+		
 
 		if (args.queryObj._sort) {
 			let sortField = args.queryObj._sort;
@@ -234,7 +234,7 @@ var HANDLERS = {
 		//let tCallback = callback.bind({field: fieldList[i]});
 		let tCallback = callback;
 
-		let tUrl = solrPath.replace("%s", input).replace(/ /g, "%20");
+		let tUrl = solrPath;//.replace("%s", input).replace(/ /g, "%20");
 
 		if (CONTEXT.DEBUG > 1) console.log('solr path', tUrl);
 
