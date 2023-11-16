@@ -1,26 +1,26 @@
 function(commandLine){
-    var solrHost = commandLine.hasOwnProperty('solrHost') ? commandLine['solrHost'] : CONTEXT.SOLRHOST;
-    var solrPort = commandLine.hasOwnProperty('solrPort') ? commandLine['solrPort'] : CONTEXT.SOLRPORT;
-    var solrCollection = commandLine.hasOwnProperty('solrCollection') ? commandLine['solrCollection'] : CONTEXT.SOLRCOLLECTION;
-    var solrPath = commandLine.hasOwnProperty('solrPath') ? commandLine['solrPath'] : "/api/solr/" + solrCollection + "/update";
-    var batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
-    var inFileName = commandLine.hasOwnProperty('inFileName') ? commandLine['inFileName'] : '/tmp/out_solr.log';
-    var testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : 'coveobase';
-    var startTag = commandLine.hasOwnProperty('startTag') ? commandLine['startTag'] : 'params={';
-    var endTag = commandLine.hasOwnProperty('endTag') ? commandLine['endTag'] : '} hits=';
-    var keyTag = commandLine.hasOwnProperty('keyTag') ? commandLine['keyTag'] : '';
-    var requiredTag = commandLine.hasOwnProperty('requiredTag') ? commandLine['requiredTag'] : "c:" + testName;
-    var idSeed = commandLine.hasOwnProperty('idSeed') ? commandLine['idSeed'] : 'SEARCH';
-    var ignorePattern = commandLine.hasOwnProperty('ignorePattern') ? commandLine['ignorePattern'].split(",") : ['q=*:*&rows=0&wt=json','numTerms=0&show=index&wt=json'];
-    var doWork = commandLine.hasOwnProperty('doWork') ? commandLine['doWork'] === 'true' : true;
-    let passThroughParams = commandLine.hasOwnProperty('passThroughParams') ? commandLine['passThroughParams'].split(",") : ["*"];
-    var useAsSeed  = commandLine.hasOwnProperty('useAsSeed') ? commandLine['useAsSeed'] === 'true' : true;
-    var seedTemplate = commandLine.hasOwnProperty('seedTemplate') ? commandLine['seedTemplate'] : '';
-    var csvData  = commandLine.hasOwnProperty('csvData') ? commandLine['csvData'].replace(/\+/g,' ') : false;
+    const solrHost = commandLine.hasOwnProperty('solrHost') ? commandLine['solrHost'] : CONTEXT.SOLRHOST;
+    const solrPort = commandLine.hasOwnProperty('solrPort') ? commandLine['solrPort'] : CONTEXT.SOLRPORT;
+    const solrCollection = commandLine.hasOwnProperty('solrCollection') ? commandLine['solrCollection'] : CONTEXT.SOLRCOLLECTION;
+    const solrPath = commandLine.hasOwnProperty('solrPath') ? commandLine['solrPath'] : CONTEXT.SOLRPREFIX + solrCollection + "/update";
+    const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
+    const inFileName = commandLine.hasOwnProperty('inFileName') ? commandLine['inFileName'] : '/tmp/out_solr.log';
+    const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : 'default';
+    const startTag = commandLine.hasOwnProperty('startTag') ? commandLine['startTag'] : 'params={';
+    const endTag = commandLine.hasOwnProperty('endTag') ? commandLine['endTag'] : '} hits=';
+    const keyTag = commandLine.hasOwnProperty('keyTag') ? commandLine['keyTag'] : '';
+    const requiredTag = commandLine.hasOwnProperty('requiredTag') ? commandLine['requiredTag'] : "c:" + testName;
+    const idSeed = commandLine.hasOwnProperty('idSeed') ? commandLine['idSeed'] : 'SEARCH';
+    const ignorePattern = commandLine.hasOwnProperty('ignorePattern') ? commandLine['ignorePattern'].split(",") : ['q=*:*&rows=0&wt=json','numTerms=0&show=index&wt=json'];
+    const doWork = commandLine.hasOwnProperty('doWork') ? commandLine['doWork'] === 'true' : true;
+    const passThroughParams = commandLine.hasOwnProperty('passThroughParams') ? commandLine['passThroughParams'].split(",") : ["*"];
+    const useAsSeed  = commandLine.hasOwnProperty('useAsSeed') ? commandLine['useAsSeed'] === 'true' : true;
+    const seedTemplate = commandLine.hasOwnProperty('seedTemplate') ? commandLine['seedTemplate'] : '';
+    const csvData  = commandLine.hasOwnProperty('csvData') ? commandLine['csvData'].replace(/\+/g,' ') : false;
     
     function callback(res) {
     
-        var str = "";
+        let str = "";
     
         res.on('data', function (chunk) {
                 str += chunk;
@@ -111,7 +111,7 @@ function(commandLine){
     var rl = false;
     
     if( csvData ){
-        var instream = new CONTEXT.lib.stream.PassThrough()
+        const instream = new CONTEXT.lib.stream.PassThrough()
         instream.write(csvData);
         instream.end();
         rl = CONTEXT.lib.readline.createInterface({
@@ -120,7 +120,7 @@ function(commandLine){
             });
     }
     else {
-        var instream = CONTEXT.lib.fs.createReadStream(inFileName);
+        const instream = CONTEXT.lib.fs.createReadStream(inFileName);
         instream.readable = true;
     
         rl = CONTEXT.lib.readline.createInterface({
@@ -129,8 +129,8 @@ function(commandLine){
         });
     }
     
-    var rowCounter = 0;
-    var rowList = [];
+    let rowCounter = 0;
+    let rowList = [];
     
     function readFunc(line) {
         //onsole.log(line);
@@ -190,7 +190,8 @@ function(commandLine){
         if( CONTEXT.AUTHKEY ){
              conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
         }
-        let t = CONTEXT.lib.https.request(conf, tCallback);
+       
+        let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
         t.on('error', function(e) {console.log("Got error: " + e.message);});
         t.write(JSON.stringify(rowList));
         t.end();
@@ -207,7 +208,7 @@ function(commandLine){
                     conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
                  }
                 conf.path = solrPath + "?commit=true";
-                var t = CONTEXT.lib.https.get(conf, tCallback);
+                let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).get(conf, tCallback);
     
                 if( commandLine.callback ) commandLine.callback(commandLine.resultContext);
             }
