@@ -126,7 +126,9 @@
         "collectMetrics": "Collect",
         "rowcounta": "Prod",
         "rowcountb": "Pre",
-        "rowcount": "Delta"
+        "rowcount": "Delta",
+        "clearSummary": "Clear",
+        "downloadTest": "Download"
 },
 "help": {
     "login": "Please use your username and password to login.",
