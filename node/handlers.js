@@ -29,8 +29,12 @@ var HANDLERS = {
 			let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseArgs(this.args.queryObj.input) : this.args;
 
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
-
-			scriptToExecute(sendArgs);
+			try {
+				scriptToExecute(sendArgs);
+			}
+			catch(e) {
+				if (CONTEXT.DEBUG > 1) console.log("execute", sendArgs);
+			}
 
 			args.callback(result);
 		};
@@ -59,7 +63,12 @@ var HANDLERS = {
 
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 
-			scriptToExecute(sendArgs);
+			try {
+				scriptToExecute(sendArgs);
+			}
+			catch(e) {
+				if (CONTEXT.DEBUG > 1) console.log("execute", sendArgs);
+			}
 		};
 		CONTEXT.lib.loadAsset(assetName, getCallback.bind({ args: args }),"script");
 
@@ -90,7 +99,12 @@ var HANDLERS = {
 
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 
-			scriptToExecute(sendArgs);
+			try {
+				scriptToExecute(sendArgs);
+			}
+			catch(e) {
+				if (CONTEXT.DEBUG > 1) console.log("execute", sendArgs);
+			}
 
 			args.callback(result);
 		};
@@ -141,7 +155,12 @@ var HANDLERS = {
 
 				if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 
-				scriptToExecute(sendArgs);
+				try {
+					scriptToExecute(sendArgs);
+				}
+				catch(e) {
+					if (CONTEXT.DEBUG > 1) console.log("execute", sendArgs);
+				}
 
 
 			}
@@ -989,12 +1008,17 @@ var HANDLERS = {
 				let script = test[this.type];
 
 				eval('scriptToExecute = ' + script + ";");
-
+	
 				let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseRunnerArgs(this.args.queryObj.input) : this.args;
 
 				//console.log("sendArgs",sendArgs);
 
-				scriptToExecute(sendArgs.queryObj, args.callback);
+				try {
+					scriptToExecute(sendArgs.queryObj, args.callback);
+				}
+				catch(e) {
+					if (CONTEXT.DEBUG > 1) console.log("execute", sendArgs);
+				}
 
 				result.message = "executed " + this.type + " in " + test.testname;
 			}
