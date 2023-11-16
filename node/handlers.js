@@ -163,11 +163,11 @@ var HANDLERS = {
 		let CONTEXT = args.CONTEXT;
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
-		let solrPath = "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
 		let contentType = "SUMMARY";
 		if (args.queryObj.headeronly) {
 			contentType = "SUMMARYHEADER";
-			solrPath = "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
+			solrPath = CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
 		}
 
 		solrPath += "&fq=contenttype:" + contentType;
@@ -242,7 +242,8 @@ var HANDLERS = {
 		if (CONTEXT.AUTHKEY)
 			config.headers = { "Authorization": "Basic " + CONTEXT.AUTHKEY };
 
-		let t = CONTEXT.lib.https.get(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.get(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -273,7 +274,7 @@ var HANDLERS = {
 			parentId = args.queryObj.parentid;
 
 		if (action === "GET") {
-			let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=testname:" + testName + "&fq=-contenttype:TEST&fq=-contenttype:SEARCH&wt=json&indent=on";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=testname:" + testName + "&fq=-contenttype:TEST&fq=-contenttype:SEARCH&wt=json&indent=on";
 
 			if (parentId) {
 				solrPath += "&fq=parentid:(" + parentId + ")";
@@ -312,7 +313,8 @@ var HANDLERS = {
 			if (CONTEXT.AUTHKEY)
 				config.headers = { "Authorization": "Basic " + CONTEXT.AUTHKEY };
 
-			let t = CONTEXT.lib.https.get(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.get(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -347,7 +349,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=contenttype:SEARCH&wt=json&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype:SEARCH&wt=json&indent=on";
 
 		let input = "";
 		if (args.queryObj.query_s)
@@ -414,7 +416,8 @@ var HANDLERS = {
 		if (CONTEXT.AUTHKEY)
 			config.headers = { "Authorization": "Basic " + CONTEXT.AUTHKEY };
 
-		let t = CONTEXT.lib.https.get(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.get(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -436,7 +439,7 @@ var HANDLERS = {
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
 
 		if (action === "GET") {
-			let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=contenttype:FEEDBACK&wt=json&indent=on";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype:FEEDBACK&wt=json&indent=on";
 
 			if (args.queryObj._start)
 				solrPath += '&start=' + args.queryObj._start;
@@ -485,7 +488,8 @@ var HANDLERS = {
 			if (CONTEXT.AUTHKEY)
 				config.headers = { "Authorization": "Basic " + CONTEXT.AUTHKEY };
 
-			let t = CONTEXT.lib.https.get(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.get(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -493,7 +497,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'POST') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -515,7 +519,8 @@ var HANDLERS = {
 			let config = { host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -529,7 +534,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'DELETE') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -579,7 +584,7 @@ var HANDLERS = {
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
 
 		if (action === "GET") {
-			let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=contenttype:TEST&wt=json&indent=on";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype:TEST&wt=json&indent=on";
 
 			if (args.queryObj._start)
 				solrPath += '&start=' + args.queryObj._start;
@@ -630,7 +635,8 @@ var HANDLERS = {
 			let config = { host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -638,7 +644,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'POST') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -660,7 +666,8 @@ var HANDLERS = {
 			let config = { method: "POST", host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -674,7 +681,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'DELETE') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -696,7 +703,8 @@ var HANDLERS = {
 			let config = { method: "POST", host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -717,7 +725,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&wt=json&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&wt=json&indent=on";
 
 		let testName = "default";
 
@@ -786,7 +794,8 @@ var HANDLERS = {
 		let config = { host: solrHost, port: solrPort, path: tUrl, headers: { 'Content-Type': 'application/json' } };
 		if (CONTEXT.AUTHKEY)
 			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-		let t = CONTEXT.lib.https.request(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -801,7 +810,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?fl=query_txt,qtime,qtimeb,qtimea,rowcount,rowcounta,rowcountb,topdocdefore,topdocafter,countscore,matchscore,differencescore,matchscorelist&q=*:*&wt=csv&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?fl=query_txt,qtime,qtimeb,qtimea,rowcount,rowcounta,rowcountb,topdocdefore,topdocafter,countscore,matchscore,differencescore,matchscorelist&q=*:*&wt=csv&indent=on";
 
 		let testName = "default";
 
@@ -845,7 +854,8 @@ var HANDLERS = {
 		let config = { host: solrHost, port: solrPort, path: tUrl, headers: { 'Content-Type': 'application/json' } };
 		if (CONTEXT.AUTHKEY)
 			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-		let t = CONTEXT.lib.https.request(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -860,7 +870,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/update?commitWithin=1000&overwrite=true&wt=json";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update?commitWithin=1000&overwrite=true&wt=json";
 
 		let testName = "default";
 
@@ -900,7 +910,8 @@ var HANDLERS = {
 		let config = { headers: { "Content-Type": "text/xml", "Content-Length": payload.length }, host: solrHost, port: solrPort, method: 'POST', path: tUrl };
 		if (CONTEXT.AUTHKEY)
 			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-		let t = CONTEXT.lib.https.request(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -917,7 +928,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*";
 
 		let testName = "default";
 
@@ -1048,7 +1059,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&wt=json&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&wt=json&indent=on";
 
 		let testName = "default";
 
@@ -1097,7 +1108,8 @@ var HANDLERS = {
 		let config = { host: solrHost, port: solrPort, path: tUrl, headers: { 'Content-Type': 'application/json' } };
 		if (CONTEXT.AUTHKEY)
 			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-		let t = CONTEXT.lib.https.request(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -1113,7 +1125,7 @@ var HANDLERS = {
 		let solrHost = CONTEXT.SOLRHOST;
 		let solrPort = CONTEXT.SOLRPORT;
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
-		let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&wt=json&indent=on";
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&wt=json&indent=on";
 		let collection = "^[a-zA-Z0-9._/]+$";
 		let handler = "^[a-zA-Z0-9._/]+$";
 		let metric = "^[a-zA-Z0-9._/]+$";
@@ -1236,7 +1248,8 @@ var HANDLERS = {
 		let config = { host: solrHost, port: solrPort, path: tUrl, headers: { 'Content-Type': 'application/json' } };
 		if (CONTEXT.AUTHKEY)
 			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-		let t = CONTEXT.lib.https.request(config, tCallback);
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
 		t.on('error', function (e) {
 			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
 			args.callback({ error: e.message });
@@ -1259,7 +1272,7 @@ var HANDLERS = {
 		let solrCollection = CONTEXT.SOLRCOLLECTION;
 
 		if (action === "GET") {
-			let solrPath = "/api/solr/" + solrCollection + "/select?q=*:*&fq=contenttype:ASSET&wt=json&indent=on";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype:ASSET&wt=json&indent=on";
 
 			if (args.queryObj._start)
 				solrPath += '&start=' + args.queryObj._start;
@@ -1310,7 +1323,8 @@ var HANDLERS = {
 			let config = { host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -1318,7 +1332,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'POST') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -1340,7 +1354,8 @@ var HANDLERS = {
 			let config = { method: "POST", host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });
@@ -1354,7 +1369,7 @@ var HANDLERS = {
 			t.end();
 		}
 		else if (action === 'DELETE') {
-			let solrPath = "/api/solr/" + solrCollection + "/update";
+			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/update";
 			let callback = function (res) {
 				let str = "";
 
@@ -1376,7 +1391,8 @@ var HANDLERS = {
 			let config = { method: "POST", host: solrHost, port: solrPort, path: solrPath, headers: { 'Content-Type': 'application/json' } };
 			if (CONTEXT.AUTHKEY)
 				config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
-			let t = CONTEXT.lib.https.request(config, tCallback);
+			let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+			let t = transport.request(config, tCallback);
 			t.on('error', function (e) {
 				if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 				args.callback({ error: e.message });

@@ -55,6 +55,9 @@ var WORKERS = false;
 var WORKERSCHECK = 1000;
 var WORKERLIFE = 5000;
 var WORKER = "worker";
+var HTTPSSOLR = false;
+var SOLRPREFIX = "/solr/";
+var IGNORESSLCHECK = true;
 
 var commandLine = {};
 
@@ -107,14 +110,26 @@ if (Object.prototype.hasOwnProperty.call(commandLine, "leadercheck"))
 	WORKERSCHECK = commandLine.workerscheck;
 if (Object.prototype.hasOwnProperty.call(commandLine, "workerlife"))
 	WORKERLIFE = parseInt(commandLine.workerlife);
+if (Object.prototype.hasOwnProperty.call(commandLine, "httpssolr"))
+	HTTPSSOLR = commandLine.httpssolr == "true";
+if (Object.prototype.hasOwnProperty.call(commandLine, "solrprefix"))
+	SOLRPREFIX = commandLine.solrprefix;
+if (Object.prototype.hasOwnProperty.call(commandLine, "ignoresslcheck"))
+	IGNORESSLCHECK = commandLine.ignoresslcheck == "true";
 if (Object.prototype.hasOwnProperty.call(commandLine, "worker"))
 	WORKER = commandLine.worker;
 else
 	WORKER = WORKER + new Date().getTime();
 
+if( IGNORESSLCHECK )
+	process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
 const CONTEXT = {
 	commandLine: commandLine,
 	PORT: PORT,
+	HTTPSSOLR: HTTPSSOLR,
+	SOLRPREFIX: SOLRPREFIX,
+	IGNORESSLCHECK: IGNORESSLCHECK,
 	SOLRHOST: SOLRHOST,
 	SOLRPORT: SOLRPORT,
 	DOCUMENTROOT: DOCUMENTROOT,
@@ -259,7 +274,7 @@ function followTheLeader() {
 	if (AUTHKEY)
 		config.headers = { "Authorization": "Basic " + AUTHKEY };
 
-	let t = http.request(config, callback.bind({ CONTEXT: CONTEXT }));
+	let t = (HTTPSSOLR ? https : http).request(config, callback.bind({ CONTEXT: CONTEXT }));
 	t.on('error', function (e) {
 		if (CONTEXT.DEBUG > 1) console.log("Got error: " + e.message);
 	});
@@ -671,7 +686,7 @@ function getRESTData(args) {
 	if (AUTHKEY)
 		config.headers = { "Authorization": "Basic " + AUTHKEY };
 
-	let t = https.get(config, callback.bind({ args: args }));
+	let t = (HTTPSSOLR ? https : http).get(config, callback.bind({ args: args }));
 	t.on('error', function (e) {
 		if (DEBUG > 1) console.log("Got error: " + e.message);
 		args.callback({ error: e.message });
@@ -693,7 +708,7 @@ function loadAsset(assetName, callback, assetType) {
 
 	let solrHost = SOLRHOST;
 	let solrPort = SOLRPORT;
-	let solrPath = "/api/solr/" + SOLRCOLLECTION + "/select?wt=json&rows=1&indent=on&q=*:*&fq=contenttype:ASSET&fq=assetname:" + assetName;
+	let solrPath = SOLRPREFIX + SOLRCOLLECTION + "/select?wt=json&rows=1&indent=on&q=*:*&fq=contenttype:ASSET&fq=assetname:" + assetName;
 
 	if (assetType) {
 		solrPath += "&fq=assettype:" + assetType;
@@ -728,7 +743,7 @@ function loadAsset(assetName, callback, assetType) {
 	let config = { host: solrHost, port: solrPort, path: solrPath };
 	if (AUTHKEY)
 		config.headers = { "Authorization": "Basic " + AUTHKEY };
-	let t = https.get(config, queryCallback);
+	let t = (HTTPSSOLR ? https : http).get(config, queryCallback);
 	t.on('error', function (e) {
 		if (DEBUG > 1) console.log("Got error: " + e.message);
 		callback({ error: e.message });
@@ -742,7 +757,7 @@ function loadTest(testName, callback, testType,encoded) {
 
 	let solrHost = SOLRHOST;
 	let solrPort = SOLRPORT;
-	let solrPath = "/api/solr/" + SOLRCOLLECTION + "/select?wt=json&rows=1&indent=on&q=*:*&fq=contenttype:TEST&fq=testname:" + testName;
+	let solrPath = SOLRPREFIX + SOLRCOLLECTION + "/select?wt=json&rows=1&indent=on&q=*:*&fq=contenttype:TEST&fq=testname:" + testName;
 
 	///if( testType ){
 	//	solrPath += "&fq=testtype:" + testType;
@@ -810,7 +825,7 @@ function loadTest(testName, callback, testType,encoded) {
 	let config = { host: solrHost, port: solrPort, path: solrPath };
 	if (AUTHKEY)
 		config.headers = { "Authorization": "Basic " + AUTHKEY };
-	let t = https.get(config, queryCallback);
+	let t = (HTTPSSOLR ? https : http).get(config, queryCallback);
 	t.on('error', function (e) {
 		if (DEBUG > 1) console.log("Got error: " + e.message);
 		callback({ error: e.message });
