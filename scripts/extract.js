@@ -357,7 +357,7 @@ function(oCommandLine){
 
 function startWork(oCommandLine){
 
-var doFinally = function(){
+let doFinally = function(){
 			console.wslog("do finally");
 	let finalCB = function(){
 		console.wslog("finally done");
