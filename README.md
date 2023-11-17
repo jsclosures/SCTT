@@ -5,6 +5,12 @@ create config set
 
 D:\apps\solr-8.2.0\server\scripts\cloud-scripts\zkcli.bat -cmd upconfig -z localhost:9983 -confdir D:\aworkspace\jsclosures\sctt\git\validate\conf -confname validate
 
+
+bash /Users/steveharris/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd upconfig -zkhost dev-zk-1.goradar.it -confname validate -confdir  /Users/steveharris/git/node/SCTT/validate/conf
+
+bash /Users/steveharris/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd clear -zkhost dev-zk-1.goradar.it /configs/validate
+
+
 create collection 
 
 set PATH=%PATH%;C:\Users\sharris\git\node-v18.17.1-win-x64
