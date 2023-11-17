@@ -27,23 +27,23 @@ function(commandLine){
   }
   
   function connectWithLine(div1, div2, color, thickness) { // draw a line connecting elements
-      var off1 = getOffset(div1);
-      var off2 = getOffset(div2);
+      let off1 = getOffset(div1);
+      let off2 = getOffset(div2);
       console.log("build line",off1,off2);
       
       // bottom right
-      var x1 = off1.left;// + Math.round(off1.width/2);
-      var y1 = off1.top + 10;
+      let x1 = off1.left;// + Math.round(off1.width/2);
+      let y1 = off1.top + 10;
       // top right
-      var x2 = off2.left - 20;
-      var y2 = off2.top + 10;
+      let x2 = off2.left - 20;
+      let y2 = off2.top + 10;
       // distance
-      var length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
+      let length = Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
       // center
-      var cx = ((x1 + x2) / 2) - (length / 2);
-      var cy = ((y1 + y2) / 2) - (thickness / 2);
+      let cx = ((x1 + x2) / 2) - (length / 2);
+      let cy = ((y1 + y2) / 2) - (thickness / 2);
       // angle
-      var angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
+      let angle = Math.atan2((y1-y2),(x1-x2))*(180/Math.PI);
       // make hr
       //var htmlLine = "<div style='padding:0px; margin:0px; height:" + thickness + "px; background-color:" + color + "; line-height:1px; position:absolute; left:" + cx + "px; top:" + cy + "px; width:" + length + "px; -moz-transform:rotate(" + angle + "deg); -webkit-transform:rotate(" + angle + "deg); -o-transform:rotate(" + angle + "deg); -ms-transform:rotate(" + angle + "deg); transform:rotate(" + angle + "deg);' />";
       //
@@ -66,7 +66,7 @@ function(commandLine){
       console.log("new widget",result);
       return( result );
   }
-  var profileManager = getCurrentContext().UIProfileManager;
+  let profileManager = getCurrentContext().UIProfileManager;
               
                   let searchBox = this.searchBox;
                   let messageBox = this.messageBox;
@@ -77,8 +77,8 @@ function(commandLine){
                   let allData = {};
                   
                   function findMatch(rec,key1,key2,otherList){
-                      var result = -1;
-                      for(var i = 0;i < otherList.length;i++){
+                    let result = -1;
+                      for(let i = 0;i < otherList.length;i++){
                           if( (rec[key1] && rec[key1] === otherList[i][key1]) || (rec[key2] && rec[key2] === otherList[i][key2]) ){
                               result = i;
                               break;
@@ -91,7 +91,7 @@ function(commandLine){
                   function indexOf(str,otherList){
                       let result = -1;
                       if( otherList ){
-                      for(var i = 0;i < otherList.length;i++){
+                      for(let i = 0;i < otherList.length;i++){
                           if( str == otherList[i] ){
                               result = i;
                               break;
@@ -164,7 +164,7 @@ function(commandLine){
                                   WIDGETFACTORY.addWidgetToContainer({parent: allData[sourceB].resultPanel,child: bDocWidget});
                               }
                               
-                              var matchIndex = findMatch(aList[i],"id","topdoc",bList);
+                              let matchIndex = findMatch(aList[i],"id","topdoc",bList);
                               
                               if( matchIndex > -1 ){
                                   if(  matchIndex != i ){

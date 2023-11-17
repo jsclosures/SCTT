@@ -1,29 +1,29 @@
 function(oCommandLine){
 	function extractTest(commandLine){
-	var batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 12;
-	var sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 12;
-	var vehicleId= commandLine.hasOwnProperty('vehicleId') ? commandLine['vehicleId'] : '';
-	var sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
-        var testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
-	var sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
-	var sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
-	var sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
-	var sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : "/api/solr/" + sourceSolrCollection + "/select?fl=*&wt=json&rows=" + sourceResultSize + "&";
-	var sourceSolrField = commandLine.hasOwnProperty('sourceSolrField') ? commandLine['sourceSolrField'] : "id";
-	var sourceSolrIdField = commandLine.hasOwnProperty('sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
+	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 12;
+	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 12;
+	const vehicleId= commandLine.hasOwnProperty('vehicleId') ? commandLine['vehicleId'] : '';
+	const sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
+    const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
+	const sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
+	const sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
+	const sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
+	const sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : CONTEXT.SOLRPREFIX + sourceSolrCollection + "/select?fl=*&wt=json&rows=" + sourceResultSize + "&";
+	const sourceSolrField = commandLine.hasOwnProperty('sourceSolrField') ? commandLine['sourceSolrField'] : "id";
+	const sourceSolrIdField = commandLine.hasOwnProperty('sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 
-	var validateSolrHost = commandLine.hasOwnProperty('validateSolrHost') ? commandLine['validateSolrHost'] : CONTEXT.SOLRHOST;
-	var validateSolrPort = commandLine.hasOwnProperty('validateSolrPort') ? commandLine['validateSolrPort'] : CONTEXT.SOLRPORT;
-	var validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/select?fq=contenttype:SEARCH&q=(testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
-	var validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/update";
-	var validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
-	var validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "BEFORE";
-	var validateSolrField = commandLine.hasOwnProperty('validateSolrField') ? commandLine['validateSolrField'] : "query_txt";
-	var validateSolrIdField = commandLine.hasOwnProperty('validateSolrIdField') ? commandLine['validateSolrIdField'] : "id";
-	var includeDetail = commandLine.hasOwnProperty('includeDetail') ? commandLine['includeDetail'] : '';
-	var writeMode = commandLine.hasOwnProperty('writeMode') ? commandLine['writeMode'] : 'truncate';
-	var cursorMark = "*";
-	var queryCount = 0;
+	const validateSolrHost = commandLine.hasOwnProperty('validateSolrHost') ? commandLine['validateSolrHost'] : CONTEXT.SOLRHOST;
+	const validateSolrPort = commandLine.hasOwnProperty('validateSolrPort') ? commandLine['validateSolrPort'] : CONTEXT.SOLRPORT;
+	const validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/select?fq=contenttype:SEARCH&q=(testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
+	const validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/update";
+	const validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
+	const validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "BEFORE";
+	const validateSolrField = commandLine.hasOwnProperty('validateSolrField') ? commandLine['validateSolrField'] : "query_txt";
+	const validateSolrIdField = commandLine.hasOwnProperty('validateSolrIdField') ? commandLine['validateSolrIdField'] : "id";
+	const includeDetail = commandLine.hasOwnProperty('includeDetail') ? commandLine['includeDetail'] : '';
+	const writeMode = commandLine.hasOwnProperty('writeMode') ? commandLine['writeMode'] : 'truncate';
+	let cursorMark = "*";
+	let queryCount = 0;
 		
 	let LOOPCTX = {offset: 0,docs: [],size: 0}; 
 
@@ -112,7 +112,7 @@ function(oCommandLine){
 	}
 
 	function callback(res) {
-	  var str = "";
+	  let str = "";
 	  res.on('data', function (chunk) {
 				  str += chunk;
 				  
@@ -239,7 +239,7 @@ function(oCommandLine){
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
 
-			var t = CONTEXT.lib.https.request({hostname: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath,method: 'POST',headers: headers}, tCallback);
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath,method: 'POST',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.write(JSON.stringify(docDetailList));
 			t.end();
@@ -254,7 +254,7 @@ function(oCommandLine){
 		if( sourceMode == 'COVEO' ){
 			let payload  = {q: doc["query_txt"],pipeline: sourceSolrCollection,sortCriteria: "relevancy",firstResult: 0,numberOfResults: batchSize};
 			//console.wslog(tSourceSolrPath);
-			let t = CONTEXT.lib.https.request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.write(JSON.stringify(payload));
 			t.end();
@@ -272,8 +272,8 @@ function(oCommandLine){
 			//console.wslog(tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			let conf = {hostname: sourceSolrHost,port: sourceSolrPort,path: "/v1/products/search",method: 'POST',headers: headers};
-			conf.agent =  CONTEXT.lib.https.Agent({keepAlive:true});
-			let t = CONTEXT.lib.https.request(conf, tCallback);
+			conf.agent =  (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).Agent({keepAlive:true});
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
 
 			t.on('error', function(e) {
 				console.wslog("Got error: " + e.message);
@@ -296,7 +296,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
-			let t = CONTEXT.lib.https.request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}         
@@ -310,7 +310,7 @@ function(oCommandLine){
 		let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
-		let t = CONTEXT.lib.https.request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: headers}, tCallback);
+		let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: headers}, tCallback);
 		t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 		t.end();
 	}
@@ -323,7 +323,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
-			let t = CONTEXT.lib.https.request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'POST',headers: headers}, tCallback);
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'POST',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.write(JSON.stringify(payload));
 			t.end();
@@ -342,8 +342,8 @@ function(oCommandLine){
 		}
 		else {
 			console.wslog("do complete commit");
-			var tCallback = callback.bind({});
-			var t = http.get({host: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath + "?commit=true"}, tCallback);
+			let tCallback = callback.bind({});
+			let t = http.get({host: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath + "?commit=true"}, tCallback);
 		}
 	}
 
@@ -364,10 +364,10 @@ var doFinally = function(){
 
 					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 	}
-	var sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
+	let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 						sourceSolrHost: "",
 						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
-						sourceMode: "AZ",
+						sourceMode: "SOLR",
 						sourceSolrPort: 443,
 						sourceSolrCollection: "",
 						validateSolrType:"BEFORE",
@@ -381,9 +381,9 @@ var doFinally = function(){
 	extractTest(sourceSolrB);
 }
 
-var sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
+let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
-					sourceMode: "AZ",
+					sourceMode: "SOLR",
 					sourceSolrHost: "",
 					sourceSolrPort: 443,
 					sourceSolrCollection: "",
