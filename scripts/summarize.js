@@ -1,29 +1,29 @@
 function(commandLine){
-    var batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
-    var sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 2;
-    var testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : 'default';
+    const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
+    const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 2;
+    const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : 'default';
     
-    var sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
-    var sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
-    var sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
-    var sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : "/api/solr/" + sourceSolrCollection + "/select?wt=json&sort=parentid desc,contenttype desc&rows=" + sourceResultSize;
-    var sourceHeaderSolrPath = commandLine.hasOwnProperty('sourceHeaderSolrPath') ? commandLine['sourceHeaderSolrPath'] : "/api/solr/" + sourceSolrCollection + "/select?wt=json&rows=1000&q=testname:" + testName;
-    var sourceSolrIdField = commandLine.hasOwnProperty('sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
-    var sourceFilterQuery = commandLine.hasOwnProperty('sourceFilterQuery') ? commandLine['sourceFilterQuery'] : "(contenttype:BEFORE OR contenttype:AFTER)";
-    var sourceHeaderFilterQuery = commandLine.hasOwnProperty('sourceHeaderFilterQuery') ? commandLine['sourceHeaderFilterQuery'] : "(contenttype:JMXQUERYBEFORE OR contenttype:JMXQUERYAFTER)";
+    const sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
+    const sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
+    const sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
+    const sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : CONTEXT.SOLRPREFIX + sourceSolrCollection + "/select?wt=json&sort=parentid desc,contenttype desc&rows=" + sourceResultSize;
+    const sourceHeaderSolrPath = commandLine.hasOwnProperty('sourceHeaderSolrPath') ? commandLine['sourceHeaderSolrPath'] : CONTEXT.SOLRPREFIX + sourceSolrCollection + "/select?wt=json&rows=1000&q=testname:" + testName;
+    const sourceSolrIdField = commandLine.hasOwnProperty('sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
+    const sourceFilterQuery = commandLine.hasOwnProperty('sourceFilterQuery') ? commandLine['sourceFilterQuery'] : "(contenttype:BEFORE OR contenttype:AFTER)";
+    const sourceHeaderFilterQuery = commandLine.hasOwnProperty('sourceHeaderFilterQuery') ? commandLine['sourceHeaderFilterQuery'] : "(contenttype:JMXQUERYBEFORE OR contenttype:JMXQUERYAFTER)";
     
-    var validateSolrHost = commandLine.hasOwnProperty('validateSolrHost') ? commandLine['validateSolrHost'] : CONTEXT.SOLRHOST;
-    var validateSolrPort = commandLine.hasOwnProperty('validateSolrPort') ? commandLine['validateSolrPort'] : CONTEXT.SOLRPORT;
-    var validateSolrCollection = commandLine.hasOwnProperty('validateSolrCollection') ? commandLine['validateSolrCollection'] : CONTEXT.SOLRCOLLECTION;
-    var validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : "/api/solr/" + validateSolrCollection + "/select?q=(contenttype:SEARCH+AND+testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
-    var validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : "/api/solr/validate/update";
-    var validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
-    var validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "SUMMARY";
+    const validateSolrHost = commandLine.hasOwnProperty('validateSolrHost') ? commandLine['validateSolrHost'] : CONTEXT.SOLRHOST;
+    const validateSolrPort = commandLine.hasOwnProperty('validateSolrPort') ? commandLine['validateSolrPort'] : CONTEXT.SOLRPORT;
+    const validateSolrCollection = commandLine.hasOwnProperty('validateSolrCollection') ? commandLine['validateSolrCollection'] : CONTEXT.SOLRCOLLECTION;
+    const validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : CONTEXT.SOLRPREFIX + validateSolrCollection + "/select?q=(contenttype:SEARCH+AND+testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
+    const validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : CONTEXT.SOLRPREFIX + "validate/update";
+    const validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
+    const validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "SUMMARY";
     
-    var missingSentinal = commandLine.hasOwnProperty('missingSentinal') ? commandLine['missingSentinal'] : -1000;
+    let missingSentinal = commandLine.hasOwnProperty('missingSentinal') ? commandLine['missingSentinal'] : -1000;
     
-    var cursorMark = "*";
-    var queryCount = 0;
+    let cursorMark = "*";
+    let queryCount = 0;
         let LOOPCTX = {offset: 0,docs: [],size: 0}; 
     
         function loopResults(){
@@ -208,7 +208,7 @@ function(commandLine){
                     if( CONTEXT.AUTHKEY )
                         conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
     
-            var t = CONTEXT.lib.https.request(conf, tCallback);
+            var t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
             t.on('error', function(e) {console.log("Got error: " + e.message);});
             t.write(JSON.stringify(docDetailList));
             t.end();
@@ -224,7 +224,7 @@ function(commandLine){
             if( CONTEXT.AUTHKEY )
                         conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
     
-        let t = CONTEXT.lib.https.request(conf, tCallback);
+        let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
         t.on('error', function(e) {console.log("Got error: " + e.message);});
         t.end();
     }
@@ -238,7 +238,7 @@ function(commandLine){
     
                     if( CONTEXT.AUTHKEY )
                         conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
-        let t = CONTEXT.lib.https.request(conf, tCallback);
+        let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
         t.on('error', function(e) {console.log("Got error: " + e.message);});
         t.end();
     }
@@ -250,13 +250,13 @@ function(commandLine){
         }
         else {
             var tCallback = callback.bind({});
-    var tValidateSolrPath = validateSolrUpdatePath + "?commit=true";
+    let tValidateSolrPath = validateSolrUpdatePath + "?commit=true";
     
-    var conf = {hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
+    let conf = {hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
     
                     if( CONTEXT.AUTHKEY )
                         conf.headers['Authorization'] = 'Basic ' + CONTEXT.AUTHKEY;
-            var t = CONTEXT.lib.https.get(conf, tCallback);
+            const t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).get(conf, tCallback);
         }
     }
     
