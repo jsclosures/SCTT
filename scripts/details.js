@@ -1,8 +1,8 @@
 function(commandLine,callback){
 
-	var solrHost = CONTEXT.SOLRHOST;
-			var solrPort = CONTEXT.SOLRPORT;
-			var solrPath = "/api/solr/validate/select?q=*:*";
+	const solrHost = CONTEXT.SOLRHOST;
+	const solrPort = CONTEXT.SOLRPORT;
+	let solrPath = CONTEXT.SOLRPREFIX + "validate/select?q=*:*";
 			
 			let testName = "default"; 
 	
@@ -12,9 +12,9 @@ function(commandLine,callback){
 			if( testName ){
 				solrPath += "&fq=testname:" + testName;
 			}
-			var finalResult = {items: []};
+			let finalResult = {items: []};
 	
-			var collectorCB = function(data){
+			const collectorCB = function(data){
 				if( data.items ){
 					this.result.items = this.result.items.concat(data.items);
 					this.result.numFound = this.result._totalItems;
@@ -26,7 +26,7 @@ function(commandLine,callback){
 				else
 					this.callback(this.result);
 			}
-			var pathList = [
+			const pathList = [
 							{type: "query",label: "SummaryMaxQTimes",field: "qtime",path: solrPath + "&fq=contenttype:SUMMARY&rows=1&sort=qtime+desc"},
 							{type: "query",label: "SummaryMaxRowCount",field: "rowcount",path: solrPath + "&fq=contenttype:SUMMARY&rows=1&sort=rowcount+desc"},
 							{type: "query",label: "SummaryMinQTime",field: "qtime",path: solrPath + "&fq=contenttype:SUMMARY&rows=1&sort=qtime+asc"},
