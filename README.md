@@ -295,6 +295,13 @@ http://sctthost:8180
       "indexed":false,
       "required":false,
       "stored":true},
+       "add-field":{
+      "name":"testsummaryextractscript",
+      "type":"binary",
+      "multiValued":false,
+      "indexed":false,
+      "required":false,
+      "stored":true},
      "add-field":{
       "name":"testharvestscript",
       "type":"binary",
