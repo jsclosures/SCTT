@@ -1232,7 +1232,7 @@ function buildApplicationHeader(context) {
 	var tViewFieldWrapper = new dojox.layout.TableContainer({
 		id : tHeader.id + "app" + "wrapper",
 		customClass : "headertoolbarTable",
-		style : "",
+		style : "text-align: right;",
 		showLabels : false,
 		colspan : 1,
 		cols : 2
@@ -1333,9 +1333,9 @@ function buildApplicationHeader(context) {
 	});
 
 	//tHeader.addChild(tLogo);
-	tViewFieldWrapper.addChild(tLogo);
+	//tViewFieldWrapper.addChild(tLogo);
 
-	registeredWidgetList.push(tLogo.id);
+	//registeredWidgetList.push(tLogo.id);
 
 	var tLip = new dijit.layout.ContentPane({
 		id : "appheader_lip",
