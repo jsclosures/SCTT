@@ -259,7 +259,7 @@ var CONTENTTYPE = "TEST";
 	
 	context.preLoadTarget = function(rec){
         console.log("load",rec);
-        let isAdmin = getCurrentContext().SessionManager.getAttribute("userId") == 'admin';
+        let isAdmin = getCurrentContext().SessionManager.hasAdminRole(getCurrentContext().SessionManager.getAttribute("userId"));
         enableEditorTabs(isAdmin);
         try {
             if( rec.testharvestscript )

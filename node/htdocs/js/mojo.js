@@ -693,6 +693,12 @@ purgeData: function(args){
  */
 mojo.data.SessionManager = {
 cachedData: false,
+hasAdminRole: function(userName){
+    let result = userName && userName.startsWith("admin");
+
+
+    return( result );
+},
 getAttribute: function(stringToken){
     var result = stringToken;
     

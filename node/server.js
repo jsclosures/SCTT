@@ -42,8 +42,8 @@ const mimeType = {
 
 //Lets define a port we want to listen to
 var PORT = 8180;
-var SOLRHOST = "harcor.com";
-var SOLRPORT = 443;
+var SOLRHOST = "localhost";
+var SOLRPORT = 8983;
 var SOLRCOLLECTION = "validate";
 var DOCUMENTROOT = "./";
 var DEBUG = 0;

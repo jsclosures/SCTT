@@ -1892,7 +1892,7 @@ function buildTabContainer(ctx) {
 			for (var i = 0; i < children.length; i++) {
 				currentRec = children[i];
 				ctx2d.fillStyle = currentRec.style;
-				drawRectangle(ctx2d, i * cellWidth, 0, cellWidth, cellHeight);
+				//drawRectangle(ctx2d, i * cellWidth, 0, cellWidth, cellHeight);
 				ctx2d.fillStyle = "rgb(0,0,0)";
 				ctx2d.fillText(uimanager.getString(currentRec.name), i * cellWidth + 10, 10);
 			}

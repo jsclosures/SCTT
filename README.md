@@ -1,6 +1,10 @@
 # sctt
 search configuration tracking tool
 
+The easiest way to get up and running is to use the curl script below to load all the fields you need into the default collection named "validate".
+
+Otherwise, create the configset and add the default collection named "validate"
+
 create config set
 
 D:\apps\solr-8.2.0\server\scripts\cloud-scripts\zkcli.bat -cmd upconfig -z localhost:9983 -confdir D:\aworkspace\jsclosures\sctt\git\validate\conf -confname validate
@@ -19,6 +23,8 @@ http://localhost:8983/solr/admin/collections?action=CREATE&name=validate&collect
 
 Start the node server
 
+First go to the "node" sub folder in this project.
+
 cd node
 
 node ./server.js  OPTIONS
@@ -30,7 +36,9 @@ OPTIONS
 port=8180
 solrhost=localhost
 solrport=8983
-solrcollection="validate
+solrcollection=validate
+httpssolr=false
+solrprefix=/solr
 debug=0
 
 
@@ -42,8 +50,12 @@ http://sctthost:8180
   create collection 'validate'  with _default config set.
   
   Then add these fields:
-  
+
+linux
   curl -X POST -H 'Content-type:application/json' --data-binary '{
+  
+  windows 
+  curl -Method POST -Headers @{accept='*/*';Authorization='Basic c29scjpTb2xyUm9ja3M='} -Uri http://localhost:8983/solr/validate/schema -ContentType 'application/json' -Body '{
   "add-field":{
       "name":"assetname",
       "type":"text_general",
