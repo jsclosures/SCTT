@@ -59,7 +59,8 @@ body
     font-size:14px;
     font-family:Verdana, Geneva, Arial, Helvetica, sans-serif;
     font-weight: plain;
-    float: right;
+    xfloat: middle;
+    text-align-last: center;
 }
 .loginfooter a {
     color: #ffffff;
