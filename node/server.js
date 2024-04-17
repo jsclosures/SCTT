@@ -58,6 +58,7 @@ var WORKER = "worker";
 var HTTPSSOLR = false;
 var SOLRPREFIX = "/solr/";
 var IGNORESSLCHECK = true;
+var IGNORELOGIN = false;
 
 var commandLine = {};
 
@@ -116,6 +117,8 @@ if (Object.prototype.hasOwnProperty.call(commandLine, "solrprefix"))
 	SOLRPREFIX = commandLine.solrprefix;
 if (Object.prototype.hasOwnProperty.call(commandLine, "ignoresslcheck"))
 	IGNORESSLCHECK = commandLine.ignoresslcheck == "true";
+if (Object.prototype.hasOwnProperty.call(commandLine, "ignorelogin"))
+	IGNORELOGIN = commandLine.ignorelogin == "true";
 if (Object.prototype.hasOwnProperty.call(commandLine, "worker"))
 	WORKER = commandLine.worker;
 else
@@ -369,7 +372,7 @@ function actualHandleRequest(request, response, bodyData) {
 		//handle auth request
 		if (contentType === 'AUTH') {
 			let cookieObj = parseCookies(request);
-			if (cookieObj.zen) {
+			if (cookieObj.zen || IGNORELOGIN ) {
 				result.status = 1;
 				result.message = "AOK";
 				let userName = cookieObj.zen;
@@ -389,7 +392,7 @@ function actualHandleRequest(request, response, bodyData) {
 			let userName = queryObj.user;
 			let userKey = queryObj.password;
 
-			if (userName === userKey) {
+			if (userName === userKey || IGNORELOGIN ) {
 				result.status = 1;
 				result.message = "AOK";
 				result.alias = userName;
