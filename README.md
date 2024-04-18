@@ -1,6 +1,12 @@
 # sctt
 search configuration tracking tool
 
+Install and set up SOLR
+
+start solr with autosoftcommit set
+
+C:\apps\solr-8.8.2>bin\solr start -c -Dsolr.autoSoftCommit.maxTime=5000
+
 The easiest way to get up and running is to use the curl script below to load all the fields you need into the default collection named "validate".
 
 Otherwise, create the configset and add the default collection named "validate"
