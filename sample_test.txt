@@ -20,5 +20,5 @@
         "testsummaryextractscript":"QVNTRVQ6c3VtbWFyeWV4dHJhY3Q=",
         "testsummaryextractscript_s":"testname=default",
         "id":"TESTdefault",
-        "contenttype":"TEST"]
+        "contenttype":"TEST"
   }
