@@ -1,21 +1,22 @@
 function(oCommandLine){
 	function extractTest(commandLine){
-	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 12;
-	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 12;
+	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
+	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 10;
 	const vehicleId= commandLine.hasOwnProperty('vehicleId') ? commandLine['vehicleId'] : '';
 	const sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
     const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
 	const sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
 	const sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
 	const sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
-	const sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : CONTEXT.SOLRPREFIX + sourceSolrCollection + "/select?fl=*&wt=json&rows=" + sourceResultSize + "&";
+	const sourceSolrPrefix = commandLine.hasOwnProperty('sourceSolrPrefix') ? commandLine['sourceSolrPrefix'] : "/solr/";
+	const sourceSolrPath = commandLine.hasOwnProperty('sourceSolrPath') ? commandLine['sourceSolrPath'] : sourceSolrPrefix + sourceSolrCollection + "/select?fl=*&wt=json&rows=" + sourceResultSize + "&";
 	const sourceSolrField = commandLine.hasOwnProperty('sourceSolrField') ? commandLine['sourceSolrField'] : "id";
 	const sourceSolrIdField = commandLine.hasOwnProperty('sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 
 	const validateSolrHost = commandLine.hasOwnProperty('validateSolrHost') ? commandLine['validateSolrHost'] : CONTEXT.SOLRHOST;
 	const validateSolrPort = commandLine.hasOwnProperty('validateSolrPort') ? commandLine['validateSolrPort'] : CONTEXT.SOLRPORT;
 	const validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/select?fq=contenttype:SEARCH&q=(testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
-	const validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : "/api/solr/" + CONTEXT.SOLRCOLLECTION + "/update";
+	const validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/update";
 	const validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
 	const validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "BEFORE";
 	const validateSolrField = commandLine.hasOwnProperty('validateSolrField') ? commandLine['validateSolrField'] : "query_txt";
@@ -182,17 +183,11 @@ function(oCommandLine){
 				newDoc["status_i"] = data.duration ? data.duration : 0;
 				docList = data.results;
 			}
-			else if( sourceMode == 'AZ' ){
-				newDoc["rowcount"] = data.searchResults ? data.searchResults.totalNumberOfRecords : 0;
-				newDoc["qtime"] = 1;
-				newDoc["status_i"] = 1;
-				docList = data?.searchResults?.skuRecords;
-			}
-			else if( sourceMode == 'AZF' ){
-				newDoc["rowcount"] = data.totalCount ? data.totalCount : 0;
-				newDoc["qtime"] = data.duration ? data.duration : 0;
-				newDoc["status_i"] = data.duration ? data.duration : 0;
-				docList = data.results;
+			else if( sourceMode == 'FUSION' ){
+				newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
+				newDoc["qtime"] = data.responseHeader && data.responseHeader.QTime ? data.responseHeader.QTime : 0;
+				newDoc["status_i"] = data.responseHeader && data.responseHeader.status ? data.responseHeader.status : 0;
+				docList = data.response.docs;
 			}
 			else {
 				newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
@@ -259,35 +254,14 @@ function(oCommandLine){
 			t.write(JSON.stringify(payload));
 			t.end();
 		}
-		else if( sourceMode == 'AZ' ){
-			let payload = {
-				"preview": false,
-				"country": "USA",
-				"customerType": "B2C",
-				"salesChannel": "ECOMM",
-				"recordsPerPage": batchSize,
-				"searchText": doc["query_txt"]
-			};
-			//let payload  = {"country": "USA","customerType": "B2C","deviceType": "app","ignoreVehicleSpecificProductsCheck": false,"isVehicleSpecific": false,"keywordSearchVisual": false,"pageNumber": 1,"preview": false,"recordsPerPage": batchSize,"salesChannel": "ECOMM","searchText": doc["query_txt"],"storeId": 6029,"vehicleId": vehicleId};
-			//console.wslog(tSourceSolrPath);
+		else if( sourceMode == 'FUSION' ){
+			let tSourceSolrPath  = sourceSolrPath + "q=" + doc["query_txt"];
+			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
-			let conf = {hostname: sourceSolrHost,port: sourceSolrPort,path: "/v1/products/search",method: 'POST',headers: headers};
-			conf.agent =  (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).Agent({keepAlive:true});
-			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request(conf, tCallback);
-
-			t.on('error', function(e) {
-				console.wslog("Got error: " + e.message);
-			});
-			t.on('socket', function (socket) {
-				socket.setTimeout(5000);  
-				//socket.setEncoding('utf8');
-				socket.on('timeout', function() {
-					t.abort();
-					console.log("timeout");
-				});
-			});
-			
-			t.write(JSON.stringify(payload));
+			if (commandLine.AUTHKEY)
+				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
+			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}
 		else {
@@ -366,7 +340,8 @@ let doFinally = function(){
 	}
 	let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 						sourceSolrHost: "",
-						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
+						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+						sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
 						sourceMode: "SOLR",
 						sourceSolrPort: 443,
 						sourceSolrCollection: "",
@@ -382,7 +357,8 @@ let doFinally = function(){
 }
 
 let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "partTypeName,itemDescription",
+					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+					sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
 					sourceMode: "SOLR",
 					sourceSolrHost: "",
 					sourceSolrPort: 443,
