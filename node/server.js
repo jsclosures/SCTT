@@ -846,10 +846,9 @@ function parseArgs(line) {
 		let fields = line.split(" ");
 
 		for (let i in fields) {
-			let fieldParts = fields[i].split("=");
-
-			if (fieldParts.length > 1) {
-				result[fieldParts[0]] = fieldParts[1];
+			if( fields[i].indexOf("=") > -1 ){
+				let idx = fields[i].indexOf("=");
+				result[fields[i].substring(0,idx)] = fields[i].substring(idx+1);
 			}
 		}
 	}
@@ -867,10 +866,9 @@ function parseRunnerArgs(line) {
 		let fields = line.split(" ");
 
 		for (let i in fields) {
-			let fieldParts = fields[i].split("=");
-
-			if (fieldParts.length > 1) {
-				result[fieldParts[0]] = fieldParts[1];
+			if( fields[i].indexOf("=") > -1 ){
+				let idx = fields[i].indexOf("=");
+				result[fields[i].substring(0,idx)] = fields[i].substring(idx+1);
 			}
 		}
 	}

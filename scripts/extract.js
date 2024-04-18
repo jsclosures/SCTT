@@ -4,7 +4,8 @@ function(oCommandLine){
 	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 10;
 	const sourceSSLMode = commandLine.hasOwnProperty('sourceSSLMode') ? commandLine['sourceSSLMode'] == 'true' : false;
 	const sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
-    const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
+	const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
+	const sourceSolrAuthKey = commandLine.hasOwnProperty('sourceSolrAuthKey') ? commandLine['sourceSolrAuthKey'] : CONTEXT.AUTHKEY;
 	const sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
 	const sourceSolrPort = commandLine.hasOwnProperty('sourceSolrPort') ? commandLine['sourceSolrPort'] : CONTEXT.SOLRPORT;
 	const sourceSolrCollection = commandLine.hasOwnProperty('sourceSolrCollection') ? commandLine['sourceSolrCollection'] : CONTEXT.SOLRCOLLECTION;
@@ -162,7 +163,15 @@ function(oCommandLine){
 
 			//console.wslog(res.queryDoc,str);
 			
-			let data = JSON.parse(str);
+			let data = false;
+			
+			try {
+				data = JSON.parse(str);
+			}
+			catch(e) {
+				console.wslog("read failed: " + e);
+			}
+
 			let docDetailList = [];
 			
 			let newDoc = {  
@@ -175,56 +184,57 @@ function(oCommandLine){
 							source: sourceSolrHost + '-' + sourceSolrCollection
 						};
 						newDoc[validateSolrTypeField] = validateSolrType;
-
-			let docList = false;
-			if( sourceMode == 'COVEO' ){
-				newDoc["rowcount"] = data.totalCount ? data.totalCount : 0;
-				newDoc["qtime"] = data.duration ? data.duration : 0;
-				newDoc["status_i"] = data.duration ? data.duration : 0;
-				docList = data.results;
-			}
-			else if( sourceMode == 'FUSION' ){
-				newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
-				newDoc["qtime"] = data.responseHeader && data.responseHeader.QTime ? data.responseHeader.QTime : 0;
-				newDoc["status_i"] = data.responseHeader && data.responseHeader.status ? data.responseHeader.status : 0;
-				docList = data.response.docs;
-			}
-			else {
-				newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
-				newDoc["qtime"] = data.responseHeader && data.responseHeader.QTime ? data.responseHeader.QTime : 0;
-				newDoc["status_i"] = data.responseHeader && data.responseHeader.status ? data.responseHeader.status : 0;
-				docList = data.response.docs;
-			}
-
-			
-			if( docList && docList.length > 0 ){
-				let buffer = '';
-				
-				for(let i = 0;i < docList.length;i++){
-					if( i > 0 )
-						buffer += "~";
-					let sourceFieldTxt = getItemSourceId(docList[i],sourceSolrIdField);
-
-					buffer += sourceFieldTxt;
-					
-					let newDocDetail = {
-										"id": validateSolrType + sourceFieldTxt + i,
-										"parentid": sourceFieldTxt,
-										"query_txt": doc[validateSolrField],
-										testname: doc["testname"],
-										languageid: doc["languageid"],
-										"channelid": doc["channelid"]
-									};
-					newDocDetail[validateSolrTypeField] = validateSolrType + "DETAIL";
-					newDocDetail["sequence"] = i;
-					newDocDetail["docscore"] = docList[i].score;
-					if( includeDetail ) docDetailList.push(newDocDetail);
+			if( data ){
+				let docList = false;
+				if( sourceMode == 'COVEO' ){
+					newDoc["rowcount"] = data.totalCount ? data.totalCount : 0;
+					newDoc["qtime"] = data.duration ? data.duration : 0;
+					newDoc["status_i"] = data.duration ? data.duration : 0;
+					docList = data.results ? data.results : [];
 				}
+				else if( sourceMode == 'FUSION' ){
+					newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
+					newDoc["qtime"] = data.responseHeader && data.responseHeader.QTime ? data.responseHeader.QTime : 0;
+					newDoc["status_i"] = data.responseHeader && data.responseHeader.status ? data.responseHeader.status : 0;
+					docList = data.response ? data.response.docs : [];
+				}
+				else {
+					newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
+					newDoc["qtime"] = data.responseHeader && data.responseHeader.QTime ? data.responseHeader.QTime : 0;
+					newDoc["status_i"] = data.responseHeader && data.responseHeader.status ? data.responseHeader.status : 0;
+					docList = data.response ? data.response.docs : [];
+				}
+
 				
-				newDoc["topdoc"] = buffer;
+				if( docList && docList.length > 0 ){
+					let buffer = '';
+					
+					for(let i = 0;i < docList.length;i++){
+						if( i > 0 )
+							buffer += "~";
+						let sourceFieldTxt = getItemSourceId(docList[i],sourceSolrIdField);
+
+						buffer += sourceFieldTxt;
+						
+						let newDocDetail = {
+											"id": validateSolrType + sourceFieldTxt + i,
+											"parentid": sourceFieldTxt,
+											"query_txt": doc[validateSolrField],
+											testname: doc["testname"],
+											languageid: doc["languageid"],
+											"channelid": doc["channelid"]
+										};
+						newDocDetail[validateSolrTypeField] = validateSolrType + "DETAIL";
+						newDocDetail["sequence"] = i;
+						newDocDetail["docscore"] = docList[i].score;
+						if( includeDetail ) docDetailList.push(newDocDetail);
+					}
+					
+					newDoc["topdoc"] = buffer;
+				}
+				else
+					newDoc["topdoc"] = 'none';
 			}
-			else
-				newDoc["topdoc"] = 'none';
 
 			let tCallback = updateCallback.bind({queryDoc: doc,hasMore: hasMore,ctx});
 			
@@ -259,7 +269,7 @@ function(oCommandLine){
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
-				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
+				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
@@ -269,7 +279,7 @@ function(oCommandLine){
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
-				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
+				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
@@ -324,61 +334,61 @@ function(oCommandLine){
 	function doWork(){
 		loadValidationData(cursorMark,LOOPCTX);
 	}
+
 	truncateResults(writeMode,doWork);
 }
 
+	function startWork(oCommandLine){
 
+		let doFinally = function(){
+					console.wslog("do finally");
+			let finalCB = function(){
+				console.wslog("finally done");
 
-function startWork(oCommandLine){
-
-let doFinally = function(){
-			console.wslog("do finally");
-	let finalCB = function(){
-		console.wslog("finally done");
-
-					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
-	}
-	let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
-						sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
-						sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
-						sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
-						sourceSolrHost: oCommandLine.sourceSolrHostB ? oCommandLine.sourceSolrHostB : "localhost",
-						sourceSolrPort: oCommandLine.sourceSolrPortB ? oCommandLine.sourceSolrPortB : 443,
-						sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
-						validateSolrType:"BEFORE",
-						AUTHKEY: CONTEXT.AUTHKEY
-					};
-	for(let a in oCommandLine){
-		sourceSolrB[a] = oCommandLine[a];
-	}
+				if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
+			}
+			let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
+								sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+								sourceSolrAuthKey: oCommandLine.sourceSolrAuthKey ? oCommandLine.sourceSolrAuthKey : sourceSolrAuthKey,
+								sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
+								sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
+								sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
+								sourceSolrHost: oCommandLine.sourceSolrHostB ? oCommandLine.sourceSolrHostB : "localhost",
+								sourceSolrPort: oCommandLine.sourceSolrPortB ? oCommandLine.sourceSolrPortB : 443,
+								sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
+								validateSolrType:"BEFORE",
+								AUTHKEY: CONTEXT.AUTHKEY
+							};
+			for(let a in oCommandLine){
+				sourceSolrB[a] = oCommandLine[a];
+			}
+			
 			sourceSolrB.callback = finalCB;
 
-	extractTest(sourceSolrB);
-}
+			extractTest(sourceSolrB);
+		}
 
-let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
-					sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
-					sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
-					sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
-					sourceSolrHost: oCommandLine.sourceSolrHostA ? oCommandLine.sourceSolrHostA : "localhost",
-					sourceSolrPort: oCommandLine.sourceSolrPortA ? oCommandLine.sourceSolrPortA : 443,
-					sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
-					validateSolrType:"AFTER",
-					AUTHKEY: CONTEXT.AUTHKEY
-				};
-for(let a in oCommandLine){
-	sourceSolrA[a] = oCommandLine[a];
-}
-	sourceSolrA.callback = doFinally;
+		let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
+							sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+							sourceSolrAuthKey: oCommandLine.sourceSolrAuthKey ? oCommandLine.sourceSolrAuthKey : sourceSolrAuthKey,
+							sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
+							sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
+							sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
+							sourceSolrHost: oCommandLine.sourceSolrHostA ? oCommandLine.sourceSolrHostA : "localhost",
+							sourceSolrPort: oCommandLine.sourceSolrPortA ? oCommandLine.sourceSolrPortA : 443,
+							sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
+							validateSolrType:"AFTER",
+							AUTHKEY: CONTEXT.AUTHKEY
+						};
+		for(let a in oCommandLine){
+			sourceSolrA[a] = oCommandLine[a];
+		}
+			sourceSolrA.callback = doFinally;
 
-extractTest(sourceSolrA);
+		extractTest(sourceSolrA);
+	}
 
 
-}
-
-
-startWork(oCommandLine);
+	startWork(oCommandLine);
 
 }

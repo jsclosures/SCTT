@@ -7,15 +7,15 @@ Otherwise, create the configset and add the default collection named "validate"
 
 create config set
 
-D:\apps\solr-8.2.0\server\scripts\cloud-scripts\zkcli.bat -cmd upconfig -z localhost:9983 -confdir D:\aworkspace\jsclosures\sctt\git\validate\conf -confname validate
+D:\apps\solr-8.2.0\server\scripts\cloud-scripts\zkcli.bat -cmd upconfig -z localhost:9983 -confdir D:\aworkspace\\sctt\git\validate\conf -confname validate
 
 
-bash /Users/steveharris/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd upconfig -zkhost dev-zk-1.goradar.it -confname validate -confdir  /Users/steveharris/git/node/SCTT/validate/conf
+bash /Users/jsclosures/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd upconfig -zkhost zookeeper -confname validate -confdir  /Users/jsclosures/git/node/SCTT/validate/conf
 
-bash /Users/steveharris/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd clear -zkhost dev-zk-1.goradar.it /configs/validate
+bash /Users/jsclosures/downloads/solr-7.5.0/server/scripts/cloud-scripts/zkcli.sh -cmd clear -zkhost zookeeper /configs/validate
 
 
-create collection 
+create collection "validate"
 
 set PATH=%PATH%;C:\Users\sharris\git\node-v18.17.1-win-x64
 
@@ -31,6 +31,8 @@ node ./server.js  OPTIONS
 
 ie:  node server.js debug=11 solrhost=solrhost authkey=authkey
 
+node server.js debug=11 solrhost=localhost authkey=c29scjpTb2xyUm9ja3M=
+
 OPTIONS
 
 port=8180
@@ -40,11 +42,10 @@ solrcollection=validate
 httpssolr=false
 solrprefix=/solr
 debug=0
+authkey=xxxx
 
 
-http://sctthost:8180
-
-
+http://localhost:8180
 
 
   create collection 'validate'  with _default config set.
@@ -52,11 +53,11 @@ http://sctthost:8180
   Then add these fields:
 
 linux
-  curl -X POST -H 'Content-type:application/json' --data-binary '{
+  curl -X POST -H 'Content-type:application/json' --data-binary '{solrfields.txt}'
   
   windows 
-  curl -Method POST -Headers @{accept='*/*';Authorization='Basic c29scjpTb2xyUm9ja3M='} -Uri http://localhost:8983/solr/validate/schema -ContentType 'application/json' -Body '{ solrfields.txt}
-    }' http://localhost:8983/solr/valdiate/schema
+  curl -Method POST -Headers @{accept='*/*';Authorization='Basic c29scjpTb2xyUm9ja3M='} -Uri http://localhost:8983/solr/validate/schema -ContentType 'application/json' -Body '{solrfields.txt}'
+  http://localhost:8983/solr/valdiate/schema
 
 
 HarCor Technologies, Inc
