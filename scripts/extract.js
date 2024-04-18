@@ -2,7 +2,7 @@ function(oCommandLine){
 	function extractTest(commandLine){
 	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
 	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 10;
-	const vehicleId= commandLine.hasOwnProperty('vehicleId') ? commandLine['vehicleId'] : '';
+	const sourceSSLMode = commandLine.hasOwnProperty('sourceSSLMode') ? commandLine['sourceSSLMode'] == 'true' : false;
 	const sourceMode = commandLine.hasOwnProperty('sourceMode') ? commandLine['sourceMode'] : 'SOLR';
     const testName = commandLine.hasOwnProperty('testName') ? commandLine['testName'] : '';
 	const sourceSolrHost = commandLine.hasOwnProperty('sourceSolrHost') ? commandLine['sourceSolrHost'] : CONTEXT.SOLRHOST;
@@ -249,7 +249,7 @@ function(oCommandLine){
 		if( sourceMode == 'COVEO' ){
 			let payload  = {q: doc["query_txt"],pipeline: sourceSolrCollection,sortCriteria: "relevancy",firstResult: 0,numberOfResults: batchSize};
 			//console.wslog(tSourceSolrPath);
-			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
+			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.write(JSON.stringify(payload));
 			t.end();
@@ -260,7 +260,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
-			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}
@@ -270,7 +270,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
-			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}         
@@ -340,6 +340,7 @@ let doFinally = function(){
 	}
 	let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+						sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
 						sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
 						sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
 						sourceSolrHost: oCommandLine.sourceSolrHostB ? oCommandLine.sourceSolrHostB : "localhost",
@@ -358,6 +359,7 @@ let doFinally = function(){
 
 let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
+					sourceSSLMode: oCommandLine.sourceSSLMode ? oCommandLine.sourceSSLMode : false,
 					sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
 					sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
 					sourceSolrHost: oCommandLine.sourceSolrHostA ? oCommandLine.sourceSolrHostA : "localhost",
