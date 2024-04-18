@@ -339,12 +339,12 @@ let doFinally = function(){
 					if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 	}
 	let sourceSolrB = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
-						sourceSolrHost: "",
 						sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
 						sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
-						sourceMode: "SOLR",
-						sourceSolrPort: 443,
-						sourceSolrCollection: "",
+						sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
+						sourceSolrHost: oCommandLine.sourceSolrHostB ? oCommandLine.sourceSolrHostB : "localhost",
+						sourceSolrPort: oCommandLine.sourceSolrPortB ? oCommandLine.sourceSolrPortB : 443,
+						sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
 						validateSolrType:"BEFORE",
 						AUTHKEY: CONTEXT.AUTHKEY
 					};
@@ -359,10 +359,10 @@ let doFinally = function(){
 let sourceSolrA = {testName: oCommandLine.testName ? oCommandLine.testName  : "default",
 					sourceSolrIdField: oCommandLine.sourceIdField ? oCommandLine.sourceIdField : "title,id",
 					sourceSolrPrefix: oCommandLine.sourceSolrPrefix ? oCommandLine.sourceSolrPrefix : "/solr/",
-					sourceMode: "SOLR",
-					sourceSolrHost: "",
-					sourceSolrPort: 443,
-					sourceSolrCollection: "",
+					sourceMode: oCommandLine.sourceMode ? oCommandLine.sourceMode : "SOLR",
+					sourceSolrHost: oCommandLine.sourceSolrHostA ? oCommandLine.sourceSolrHostA : "localhost",
+					sourceSolrPort: oCommandLine.sourceSolrPortA ? oCommandLine.sourceSolrPortA : 443,
+					sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
 					validateSolrType:"AFTER",
 					AUTHKEY: CONTEXT.AUTHKEY
 				};
