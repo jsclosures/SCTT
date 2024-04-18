@@ -347,5 +347,8 @@
       "stored":true},
     "add-field":{
       "name":"url",
-      "type":"text_general"}
+      "type":"text_general"},
+    "add-copy-field":{
+     "source":"query_txt",
+     "dest":"query_s"}
 }
