@@ -46,9 +46,10 @@ solrhost=localhost
 solrport=8983
 solrcollection=validate
 httpssolr=false
-solrprefix=/solr
+solrprefix=/solr/
 debug=0
 authkey=xxxx
+ignorelogin=true
 
 
 http://localhost:8180
