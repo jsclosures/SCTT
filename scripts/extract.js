@@ -1,5 +1,7 @@
 function(oCommandLine){
 	function extractTest(commandLine){
+	const queryDelimiter = commandLine.hasOwnProperty('queryDelimiter') ? commandLine['queryDelimiter'] : "~~~";
+	const splitQuery = commandLine.hasOwnProperty('splitQuery') == 'true' ? true : false;
 	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
 	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 10;
 	const sourceSSLMode = commandLine.hasOwnProperty('sourceSSLMode') ? commandLine['sourceSSLMode'] == 'true' : false;
@@ -255,9 +257,24 @@ function(oCommandLine){
 	function validateQuery(doc,hasMore,ctx){
 		let tCallback = queryCallback.bind({queryDoc: doc,hasMore: hasMore,ctx});
 		//console.wslog(doc[validateSolrField]);
+		let queryStr = doc["query_txt"];
+
+		if( splitQuery ){
+			let queryParts = queryStr.split(queryDelimiter);
+			if( queryParts.length > 1 ){
+				if( validateSolrType == "BEFORE" ){
+					queryStr = queryParts[0];
+				}
+				else if( validateSolrType == "AFTER" ) {
+					queryStr = queryParts[1];
+				}
+			}
+		}
+		
+		queryStr = encodeURIComponent(queryStr);
 		
 		if( sourceMode == 'COVEO' ){
-			let payload  = {q: doc["query_txt"],pipeline: sourceSolrCollection,sortCriteria: "relevancy",firstResult: 0,numberOfResults: batchSize};
+			let payload  = {q: queryStr,pipeline: sourceSolrCollection,sortCriteria: "relevancy",firstResult: 0,numberOfResults: batchSize};
 			//console.wslog(tSourceSolrPath);
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
@@ -265,20 +282,20 @@ function(oCommandLine){
 			t.end();
 		}
 		else if( sourceMode == 'FUSION' ){
-			let tSourceSolrPath  = sourceSolrPath + "q=" + doc["query_txt"];
+			let tSourceSolrPath  = sourceSolrPath + "q=" + queryStr;
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
-			if (commandLine.AUTHKEY)
+			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}
 		else {
-			let tSourceSolrPath  = sourceSolrPath + "q=title_txt:" + doc["query_txt"];
+			let tSourceSolrPath  = sourceSolrPath + "q=title_txt:" + queryStr;
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
-			if (commandLine.AUTHKEY)
+			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
@@ -357,7 +374,9 @@ function(oCommandLine){
 								sourceSolrPort: oCommandLine.sourceSolrPortB ? oCommandLine.sourceSolrPortB : 443,
 								sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
 								validateSolrType:"BEFORE",
-								AUTHKEY: CONTEXT.AUTHKEY
+								AUTHKEY: CONTEXT.AUTHKEY,
+								splitQuery: oCommandLine.splitQuery,
+								queryDelimiter: oCommandLine.queryDelimiter
 							};
 			for(let a in oCommandLine){
 				sourceSolrB[a] = oCommandLine[a];
@@ -378,7 +397,9 @@ function(oCommandLine){
 							sourceSolrPort: oCommandLine.sourceSolrPortA ? oCommandLine.sourceSolrPortA : 443,
 							sourceSolrCollection: oCommandLine.sourceSolrCollectionA ? oCommandLine.sourceSolrCollectionA : "",
 							validateSolrType:"AFTER",
-							AUTHKEY: CONTEXT.AUTHKEY
+							AUTHKEY: CONTEXT.AUTHKEY,
+							splitQuery: oCommandLine.splitQuery,
+							queryDelimiter: oCommandLine.queryDelimiter
 						};
 		for(let a in oCommandLine){
 			sourceSolrA[a] = oCommandLine[a];
