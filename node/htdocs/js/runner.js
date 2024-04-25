@@ -283,6 +283,9 @@ var context = {};
         
         if( newRec.type ){
             setBusy(true,uiManager.getString("pleaseWait"));
+
+            let tObj = dijit.byId(mainId + "output");
+            tObj.attr("value",'starting\n');
             
             var dataService = getDataService(restURL, changeDataCallback, "", "");
 			let test = getCurrentContext().getCurrentTest().test;
@@ -341,6 +344,10 @@ var context = {};
     function messageUpdateCallback(message){
         let tObj = dijit.byId(mainId + "output");
         let content = tObj.attr("value");
+
+        if( content && content.length > 2048 )
+            content = '';
+            
         tObj.attr("value",message + "\n" + content);
     }
 

@@ -1,6 +1,6 @@
 function(oCommandLine){
 	function extractTest(commandLine){
-	const queryDelimiter = commandLine.hasOwnProperty('queryDelimiter') ? commandLine['queryDelimiter'] : "~~~";
+	const queryDelimiter = commandLine.hasOwnProperty('queryDelimiter') && commandLine['queryDelimiter'] ? commandLine['queryDelimiter'] : "~~~";
 	const splitQuery = commandLine.hasOwnProperty('splitQuery') ? commandLine['splitQuery'] == 'true' : false;
 	const batchSize = commandLine.hasOwnProperty('batchSize') ? commandLine['batchSize'] : 10;
 	const sourceResultSize = commandLine.hasOwnProperty('sourceResultSize') ? commandLine['sourceResultSize'] : 10;
