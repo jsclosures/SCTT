@@ -287,7 +287,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
-			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}
@@ -297,7 +297,7 @@ function(oCommandLine){
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
-			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: headers}, tCallback);
+			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: headers}, tCallback);
 			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
 			t.end();
 		}         
