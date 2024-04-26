@@ -282,7 +282,7 @@ function(oCommandLine){
 			t.end();
 		}
 		else if( sourceMode == 'FUSION' ){
-			let tSourceSolrPath  = sourceSolrPath + "q=" + encodeURIComponent(queryStr);
+			let tSourceSolrPath  = sourceSolrPath + "q=" + queryStr;
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
@@ -292,7 +292,7 @@ function(oCommandLine){
 			t.end();
 		}
 		else {
-			let tSourceSolrPath  = sourceSolrPath + "q=title_txt:" + encodeURIComponent(queryStr);
+			let tSourceSolrPath  = sourceSolrPath + "q=title_txt:" + queryStr;
 			console.wslog("solr path",tSourceSolrPath);
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
