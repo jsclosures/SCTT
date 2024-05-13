@@ -67,6 +67,17 @@ function writeLog(level, message) {
 		console.log(message);
 	}
 }
+
+console.log(process.env);
+
+if( process.env ){
+	let env = process.env;
+
+	for(let e in env){
+		commandLine[e] = env[e];
+	}
+}
+
 process.argv.forEach((val, index) => {
 	writeLog(1, `${index}: ${val}`);
 	if (index > 1) {

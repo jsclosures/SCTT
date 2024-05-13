@@ -33,6 +33,10 @@ First go to the "node" sub folder in this project.
 
 cd node
 
+npm install
+
+set the options as system properties (environment variables) or add them to the command line
+
 node ./server.js  OPTIONS
 
 ie:  node server.js debug=11 solrhost=solrhost authkey=authkey
