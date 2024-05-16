@@ -394,7 +394,7 @@ var CONTENTTYPE = "ASSET";
         return( '' );
     };
     
-    var formHeight = dojo.isIE ? 720 : 760;
+    var formHeight = dojo.isIE ? 720 : 720;
     
     context.gridStyle = "height: " + (getCurrentContext().screenHeight-formHeight) + "px;";
     
