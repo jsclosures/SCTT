@@ -41,26 +41,26 @@ const mimeType = {
 };
 
 //Lets define a port we want to listen to
-var PORT = 8180;
-var SOLRHOST = "localhost";
-var SOLRPORT = 8983;
-var SOLRCOLLECTION = "validate";
-var DOCUMENTROOT = "./";
-var DEBUG = 0;
-var AUTHKEY = "";
-var AUTHMODE = false;
-var LEADER = false;
-var LEADERCHECK = 1000;
-var WORKERS = false;
-var WORKERSCHECK = 1000;
-var WORKERLIFE = 5000;
-var WORKER = "worker";
-var HTTPSSOLR = false;
-var SOLRPREFIX = "/solr/";
-var IGNORESSLCHECK = true;
-var IGNORELOGIN = false;
+let PORT = 8180;
+let SOLRHOST = "localhost";
+let SOLRPORT = 8983;
+let SOLRCOLLECTION = "validate";
+let DOCUMENTROOT = "./";
+let DEBUG = 0;
+let AUTHKEY = "";
+let AUTHMODE = false;
+let LEADER = false;
+let LEADERCHECK = 1000;
+let WORKERS = false;
+let WORKERSCHECK = 1000;
+let WORKERLIFE = 5000;
+let WORKER = "worker";
+let HTTPSSOLR = false;
+let SOLRPREFIX = "/solr/";
+let IGNORESSLCHECK = true;
+let IGNORELOGIN = false;
 
-var commandLine = {};
+let commandLine = {};
 
 function writeLog(level, message) {
 	if (level <= DEBUG) {
@@ -171,8 +171,8 @@ const CONTEXT = {
 
 //var WORKQUEUE = false;
 //fake work
-var WORKQUEUE = [{ "id": 1, script: "function(){ console.log('hello'); }" }];
-var WORKERLIST = [];
+let WORKQUEUE = [{ "id": 1, script: "function(){ console.log('hello'); }" }];
+let WORKERLIST = [];
 
 function workCompleted(requestObj) {
 	let work = requestObj.work;
@@ -301,7 +301,7 @@ if (LEADER) {
 }
 
 function parseCookies(request) {
-	var list = {},
+	let list = {},
 		rc = request.headers.cookie;
 
 	rc && rc.split(';').forEach(function (cookie) {
@@ -325,7 +325,7 @@ function fileUnderRoot(context,fileName){
 function handleRequest(request, response) {
 	if (request.method == 'POST' || request.method == 'DELETE' || request.method == 'PUT') {
 		writeLog(1, 'POST')
-		var body = ''
+		let body = ''
 		request.on('data', function (data) {
 			body += data
 			writeLog(1, 'Partial body: ' + body)
@@ -346,13 +346,13 @@ function handleRequest(request, response) {
 //We need a function which handles requests and send response
 function actualHandleRequest(request, response, bodyData) {
 	writeLog(1, "handle request");
-	var result = { status: 0 };
+	let result = { status: 0 };
 
-	var requestUrl = request.url;
-	var requestObj = url.parse(requestUrl, true);
-	var queryObj = requestObj.query;
+	let requestUrl = request.url;
+	let requestObj = url.parse(requestUrl, true);
+	let queryObj = requestObj.query;
 	if (bodyData) {
-		for (var p in bodyData) {
+		for (let p in bodyData) {
 			if (Object.prototype.hasOwnProperty.call(bodyData, p)) {
 				queryObj[p] = bodyData[p];
 			}
@@ -361,8 +361,8 @@ function actualHandleRequest(request, response, bodyData) {
 
 	}
 	writeLog(1, "query obj", queryObj);
-	var contentType = queryObj.contenttype;
-	var pathname = requestObj.pathname;
+	let contentType = queryObj.contenttype;
+	let pathname = requestObj.pathname;
 	if (DEBUG > 1) console.log(pathname, requestUrl);
 
 	if (requestUrl.lastIndexOf('/worker/complete', 0) > -1) {
@@ -532,7 +532,7 @@ function actualHandleRequest(request, response, bodyData) {
 }
 
 //Create a server
-var server = http.createServer(handleRequest);
+let server = http.createServer(handleRequest);
 
 //Lets start our server
 server.listen(PORT, function () {
@@ -540,7 +540,7 @@ server.listen(PORT, function () {
 	if (DEBUG > 0) console.log("Server listening on: http://localhost:%s", PORT);
 });
 
-var wsServer = new WebSocketServer({
+let wsServer = new WebSocketServer({
 	httpServer: server,
 	autoAcceptConnections: false
 });
@@ -550,7 +550,7 @@ function originIsAllowed(origin) {
 	return true;
 }
 
-var logMultiplexer = {
+let logMultiplexer = {
 	sockets: {},
 	register: function (key, conn) {
 		logMultiplexer.sockets[key] = conn;
@@ -571,7 +571,7 @@ var logMultiplexer = {
 	}
 };
 
-var messageQueue = [];
+let messageQueue = [];
 
 function clearLogQueue() {
 
@@ -616,7 +616,7 @@ wsServer.on('request', function (request) {
 	}
 	if (DEBUG > 1) console.log('brequest', request);
 	let key = "harcor";
-	var connection = request.accept('echo-protocol', request.origin);
+	let connection = request.accept('echo-protocol', request.origin);
 
 	if (DEBUG > 1) console.log((new Date()) + ' Connection accepted.');
 
@@ -640,9 +640,9 @@ wsServer.on('request', function (request) {
 ///solr/validate/select?facet.field=contenttype&facet=on&fq=testname%3Aorder_product_en&q=*%3A*&rows=0
 function getRESTData(args) {
 
-	var callback = function (res) {
-		var str = "";
-		var args = this.args;
+	let callback = function (res) {
+		let str = "";
+		let args = this.args;
 
 		res.on('data', function (chunk) {
 			str += chunk;
@@ -729,7 +729,7 @@ function loadAsset(assetName, callback, assetType) {
 	}
 
 	let queryCallback = function (res) {
-		var str = "";
+		let str = "";
 
 		res.on('data', function (chunk) {
 			str += chunk;
@@ -741,7 +741,7 @@ function loadAsset(assetName, callback, assetType) {
 
 			let resp = JSON.parse(str);
 
-			var result = {};
+			let result = {};
 
 			if (resp.response && resp.response.docs) {
 				if (resp.response.docs.length > 0) {
@@ -778,7 +778,7 @@ function loadTest(testName, callback, testType,encoded) {
 	//}
 
 	let queryCallback = function (res) {
-		var str = "";
+		let str = "";
 
 		res.on('data', function (chunk) {
 			str += chunk;
@@ -790,7 +790,7 @@ function loadTest(testName, callback, testType,encoded) {
 
 			let resp = JSON.parse(str);
 
-			var result = {};
+			let result = {};
 
 			if (resp.response && resp.response.docs) {
 				if (resp.response.docs.length > 0) {

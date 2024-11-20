@@ -87,7 +87,7 @@ var CONTENTTYPE = "ASSET";
                                                                         tabPosition: "top",
                                                                         tabStrip: "true",
                                                                         title: uiManager.getString("scriptManager"),
-                                                                        style: "width: " + (getCurrentContext().screenWidth-170) + "px;height:" + (getCurrentContext().screenHeight-500) + "px;"
+                                                                        style: "width: " + (getCurrentContext().screenWidth-170) + "px;height:" + (getCurrentContext().screenHeight-600) + "px;"
                                                                    });
             let fieldList = field.list;
 
@@ -394,7 +394,7 @@ var CONTENTTYPE = "ASSET";
         return( '' );
     };
     
-    var formHeight = dojo.isIE ? 720 : 720;
+    var formHeight = dojo.isIE ? 620 : 620;
     
     context.gridStyle = "height: " + (getCurrentContext().screenHeight-formHeight) + "px;";
     
