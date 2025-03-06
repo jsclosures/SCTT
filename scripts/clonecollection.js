@@ -20,35 +20,36 @@ process.argv.forEach((val, index) => {
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED=0;
 
-let batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchSize') ? commandLine['batchSize'] : 10;
-let sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
-let sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
+commandLine.batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchSize') ? commandLine['batchSize'] : 10;
+commandLine.sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
+commandLine.sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
 
-let sourceSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrHost') ? commandLine['sourceSolrHost'] : "localhost";
-let sourceSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPort') ? commandLine['sourceSolrPort'] : 8983;
-let sourceSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrCollection') ? commandLine['sourceSolrCollection'] : 'validate';
-let sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + sourceSolrCollection + "/select?wt=json&sort=" + sourceSolrIdField + "+asc&rows=" + batchSize + "&q=" + sourceSolrQuery;
+commandLine.sourceSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrHost') ? commandLine['sourceSolrHost'] : "localhost";
+commandLine.sourceSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPort') ? commandLine['sourceSolrPort'] : 8983;
+commandLine.sourceSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrCollection') ? commandLine['sourceSolrCollection'] : 'validate';
+commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+asc&q=" + commandLine.sourceSolrQuery;
 
-let destinationSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrHost') ? commandLine['destinationSolrHost'] : "localhost";
-let destinationSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrPort') ? commandLine['destinationSolrPort'] : 8983;
-let destinationSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrCollection') ? commandLine['destinationSolrCollection'] : 'validate20';
-let destinationSolrUpdatePath = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrUpdatePath') ? commandLine['destinationSolrUpdatePath'] : "/solr/" + destinationSolrCollection + "/update";
-let authKey = Object.prototype.hasOwnProperty.call(commandLine,'authKey') ? commandLine['authKey'] : '';
-let fieldsToExclude = Object.prototype.hasOwnProperty.call(commandLine,'fieldsToExclude') ? commandLine['fieldsToExclude'].split(',') : [];
-let runForever = Object.prototype.hasOwnProperty.call(commandLine,'runForever') ? commandLine['runForever'] === 'true' : false;
-let async = Object.prototype.hasOwnProperty.call(commandLine,'async') ? commandLine['async'] === 'true' : false;
-let sslMode = Object.prototype.hasOwnProperty.call(commandLine,'sslMode') ? commandLine['sslMode'] === 'true' : false;
-let debug = Object.prototype.hasOwnProperty.call(commandLine,'debug') ? commandLine['debug'] : 0;
+commandLine.destinationSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrHost') ? commandLine['destinationSolrHost'] : "localhost";
+commandLine.destinationSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrPort') ? commandLine['destinationSolrPort'] : 8983;
+commandLine.destinationSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrCollection') ? commandLine['destinationSolrCollection'] : 'validatecopy';
+commandLine.destinationSolrUpdatePath = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrUpdatePath') ? commandLine['destinationSolrUpdatePath'] : "/solr/" + commandLine.destinationSolrCollection + "/update";
+commandLine.authKey = Object.prototype.hasOwnProperty.call(commandLine,'authKey') ? commandLine['authKey'] : '';
+commandLine.fieldsToExclude = Object.prototype.hasOwnProperty.call(commandLine,'fieldsToExclude') ? commandLine['fieldsToExclude'].split(',') : [];
+commandLine.runForever = Object.prototype.hasOwnProperty.call(commandLine,'runForever') ? commandLine['runForever'] === 'true' : false;
+commandLine.async = Object.prototype.hasOwnProperty.call(commandLine,'async') ? commandLine['async'] === 'true' : false;
+commandLine.sslMode = Object.prototype.hasOwnProperty.call(commandLine,'sslMode') ? commandLine['sslMode'] === 'true' : false;
+commandLine.debug = Object.prototype.hasOwnProperty.call(commandLine,'debug') ? commandLine['debug'] : 0;
 
-if( debug > 0 ) console.log("commandline",commandLine);
+if( commandLine.debug > 0 ) console.log("commandline",commandLine);
 
-let cursorMark = "*";
+let CONTEXT = {cursorMark:"*",lastSize: 0,commandLine,lib: {http,https}};
+
 let HANDLERS = false;
 
-function inExcludeList(fieldName){
+function inExcludeList(ctx,fieldName){
 	let result = false;
-        for(let i in fieldsToExclude){
-		if( fieldName.indexOf(fieldsToExclude[i]) > -1 ){
+        for(let i in ctx.commandLine.fieldsToExclude){
+		if( fieldName.indexOf(ctx.commandLine.fieldsToExclude[i]) > -1 ){
 			result = true;
 			break;
 		}
@@ -59,46 +60,71 @@ function inExcludeList(fieldName){
 
 function queryCallback(res) {
 	let str = "";
-  
+	let ctx = this.ctx;
+	let failed = false;
+
   res.on('data', function (chunk) {
-              str += chunk;
-              
+			try{
+				str += chunk;
+			}catch(e){
+				console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize);
+				ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
+				failed = true;
+				ctx.lastSize = str.length;
+			}     
         });
 
   res.on('end', function () {
         //console.log(res.field);
 		//console.log(str);
-		
-		let data = JSON.parse(str);
-		
-		if( data.response && data.response.docs ){
-			for(let d in data.response.docs){
-				let doc = data.response.docs[d];
-				for( let p in doc){
-					if( Object.prototype.hasOwnProperty.call(doc,p) ){
-						if( p === '_version_' || p === 'score' || inExcludeList(p) ){
-							
-							delete doc[p];
-						}
-					}
+		if( failed ){
+			loadQueryBatch(ctx);
+		}
+		else {
+			try {
+				let data = JSON.parse(str);
+
+				if( ctx.lastSize > 0 ){
+					console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
+					ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
+					ctx.lastSize = 0;
 				}
 				
+				if( data.response && data.response.docs ){
+					for(let d in data.response.docs){
+						let doc = data.response.docs[d];
+						for( let p in doc){
+							if( Object.prototype.hasOwnProperty.call(doc,p) ){
+								if( p === '_version_' || p === 'score' || inExcludeList(ctx,p) ){
+									
+									delete doc[p];
+								}
+							}
+						}
+						
+					}
+					
+					if( ctx.HANDLERS && ctx.HANDLERS["documents"] )
+						ctx.HANDLERS["documents"]({docs: data.response.docs,hasMore: data.nextCursorMark && data.nextCursorMark != ctx.cursorMark});
+					else
+						copyDocuments(ctx,data.response.docs,data.nextCursorMark && data.nextCursorMark != ctx.cursorMark);
+				}
+				//console.log(data);
+				if( data.nextCursorMark ){
+					if( ctx.cursorMark != data.nextCursorMark ){	
+						ctx.cursorMark = data.nextCursorMark;
+						if( ctx.commandLine.async ) loadQueryBatch(ctx);
+					}
+					else {
+						console.log("complete");
+						doCommit(ctx);
+					}
+				}
 			}
-			
-			if( HANDLERS && HANDLERS["documents"] )
-				HANDLERS["documents"]({docs: data.response.docs,hasMore: data.nextCursorMark && data.nextCursorMark != cursorMark});
-			else
-				copyDocuments(data.response.docs,data.nextCursorMark && data.nextCursorMark != cursorMark);
-		}
-		//console.log(data);
-		if( data.nextCursorMark ){
-			if( cursorMark != data.nextCursorMark ){	
-				cursorMark = data.nextCursorMark;
-				if( async ) loadQueryBatch(cursorMark);
-			}
-			else {
-				console.log("complete");
-				doCommit();
+			catch(e){
+				//failed
+				console.log("failed to parse " + e);
+				loadQueryBatch(ctx);
 			}
 		}
   });
@@ -107,6 +133,7 @@ function queryCallback(res) {
 function updateCallback(res) {
 	let str = "";
 	let hasMore = this.hasMore;
+	let ctx = this.ctx;
 
   res.on('data', function (chunk) {
               str += chunk;
@@ -114,15 +141,17 @@ function updateCallback(res) {
         });
 
   res.on('end', function () {
-        if( debug > 0 ) console.log("UPDATE",hasMore,str);
-	if( !async && hasMore ){
-		loadQueryBatch(cursorMark);
+        if( ctx.commandLine.debug > 0 ) console.log("UPDATE",hasMore,str);
+	if( !ctx.commandLine.async && hasMore ){
+		loadQueryBatch(ctx);
 	}
   });
 }
 
 function commitCallback(res) {
 	let str = "";
+	let ctx = this.ctx;
+
   res.on('data', function (chunk) {
               str += chunk;
               
@@ -131,60 +160,60 @@ function commitCallback(res) {
   res.on('end', function () {
         console.log("COMMIT",str);
 
-	if( runForever ){
-		cursorMark = "*";
-		loadQueryBatch(cursorMark);
+	if( ctx.commandLine.runForever ){
+		ctx.cursorMark = "*";
+		loadQueryBatch(ctx);
 	}
   });
 }
 
-function copyDocuments(docs,hasMore){
-	let tCallback = updateCallback.bind({hasMore: hasMore});
+function copyDocuments(ctx,docs,hasMore){
+	let tCallback = updateCallback.bind({ctx,hasMore});
 	//console.log("hasmore",hasMore);
-	let conf = {hostname: destinationSolrHost,port: destinationSolrPort,path: destinationSolrUpdatePath,method: 'POST',headers: {'Content-Type': 'application/json'}}
+	let conf = {hostname: ctx.commandLine.destinationSolrHost,port: ctx.commandLine.destinationSolrPort,path: ctx.commandLine.destinationSolrUpdatePath,method: 'POST',headers: {'Content-Type': 'application/json'}}
 
-	if( authKey ){
-		conf.headers['Authorization'] = 'Basic ' + authKey;
+	if( ctx.commandLine.authKey ){
+		conf.headers['Authorization'] = 'Basic ' + ctx.commandLine.authKey;
 	}
 		
-	let t = (sslMode ? https : http).request(conf, tCallback);
+	let t = (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).request(conf, tCallback);
 	t.on('error', function(e) {console.log("Got error: " + e.message);});
 	t.write(JSON.stringify(docs));
 	t.end();
 }
 
-function loadQueryBatch(cursorMark){
-	let tCallback = queryCallback.bind({});
+function loadQueryBatch(ctx){
+	let tCallback = queryCallback.bind({ctx});
 	
-	let tSourceSolrPath = sourceSolrPath + "&cursorMark=" + cursorMark;
-	let conf = {hostname: sourceSolrHost,port: sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
+	let tSourceSolrPath = ctx.commandLine.sourceSolrPath + "&cursorMark=" + ctx.cursorMark + "&rows=" + ctx.commandLine.batchSize;
+	let conf = {hostname: ctx.commandLine.sourceSolrHost,port: ctx.commandLine.sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
 
-	if( authKey ){
-		conf.headers['Authorization'] = 'Basic ' + authKey;
+	if( ctx.commandLine.authKey ){
+		conf.headers['Authorization'] = 'Basic ' + ctx.commandLine.authKey;
 	}
 
-	let t =  (sslMode ? https : http).request(conf, tCallback);
+	let t =  (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).request(conf, tCallback);
 	t.on('error', function(e) {console.log("Got error: " + e.message);});
 	t.end();
 }
 
-function doCommit(){
+function doCommit(ctx){
 
-	let tCallback = commitCallback.bind({});
+	let tCallback = commitCallback.bind({ctx});
 
-	let conf = {host: destinationSolrHost,port: destinationSolrPort,path: destinationSolrUpdatePath + "?stream.body=<commit/>"};
+	let conf = {host: ctx.commandLine.destinationSolrHost,port: ctx.commandLine.destinationSolrPort,path: ctx.commandLine.destinationSolrUpdatePath + "?commit=true"};
 
-	if( authKey ){
+	if( ctx.commandLine.authKey ){
 		conf.headers = {};
-		conf.headers['Authorization'] = 'Basic ' + authKey;
+		conf.headers['Authorization'] = 'Basic ' + ctx.commandLine.authKey;
 	}
 
-	let t =  (sslMode ? https : http).get(conf, tCallback);
+	let t =  (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).get(conf, tCallback);
 	t.on('error', function(e) {console.log("Got error: " + e.message);});
 	t.end();
 }
 
-loadQueryBatch(cursorMark);
+loadQueryBatch(CONTEXT);
 
 
 
