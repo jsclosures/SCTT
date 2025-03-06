@@ -3,6 +3,10 @@
 */
 const http = require('http');
 const https = require('https');
+const v8 = require('v8');
+
+const maxStringLength = v8.getHeapStatistics().heap_size_limit;
+console.log(`Maximum string length: ${maxStringLength}`);
 
 const commandLine = {};
 
@@ -42,7 +46,7 @@ commandLine.debug = Object.prototype.hasOwnProperty.call(commandLine,'debug') ? 
 
 if( commandLine.debug > 0 ) console.log("commandline",commandLine);
 
-let CONTEXT = {cursorMark:"*",lastSize: 0,commandLine,lib: {http,https}};
+let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: 0,commandLine,lib: {http,https}};
 
 let HANDLERS = false;
 
@@ -62,72 +66,82 @@ function queryCallback(res) {
 	let str = "";
 	let ctx = this.ctx;
 	let failed = false;
+	const contentLength = res.headers['content-length'];
+	  console.log(`Content-Length: ${contentLength}`);
+	  
+	  if( contentLength > ctx.maxStringLength ){
+		console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
+		ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
+		ctx.lastSize = 1;
+		loadQueryBatch(ctx);
+	  }
+	  else {
+			res.on('data', function (chunk) {
+				try{
+					str += chunk;
+				}catch(e){
+					console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize);
+					ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
+					failed = true;
+					ctx.lastSize = str.length;
+				}     
+			});
 
-  res.on('data', function (chunk) {
-			try{
-				str += chunk;
-			}catch(e){
-				console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize);
-				ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
-				failed = true;
-				ctx.lastSize = str.length;
-			}     
-        });
+			res.on('end', function () {
+					//console.log(res.field);
+					//console.log(str);
+					if( failed ){
+						loadQueryBatch(ctx);
+					}
+					else {
+						try {
+							let data = JSON.parse(str);
 
-  res.on('end', function () {
-        //console.log(res.field);
-		//console.log(str);
-		if( failed ){
-			loadQueryBatch(ctx);
-		}
-		else {
-			try {
-				let data = JSON.parse(str);
-
-				if( ctx.lastSize > 0 ){
-					console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
-					ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
-					ctx.lastSize = 0;
-				}
-				
-				if( data.response && data.response.docs ){
-					for(let d in data.response.docs){
-						let doc = data.response.docs[d];
-						for( let p in doc){
-							if( Object.prototype.hasOwnProperty.call(doc,p) ){
-								if( p === '_version_' || p === 'score' || inExcludeList(ctx,p) ){
+							if( ctx.lastSize > 0 ){
+								console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
+								ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
+								ctx.lastSize = 0;
+							}
+							
+							if( data.response && data.response.docs ){
+								for(let d in data.response.docs){
+									let doc = data.response.docs[d];
+									for( let p in doc){
+										if( Object.prototype.hasOwnProperty.call(doc,p) ){
+											if( p === '_version_' || p === 'score' || inExcludeList(ctx,p) ){
+												
+												delete doc[p];
+											}
+										}
+									}
 									
-									delete doc[p];
+								}
+								
+								if( ctx.HANDLERS && ctx.HANDLERS["documents"] )
+									ctx.HANDLERS["documents"]({docs: data.response.docs,hasMore: data.nextCursorMark && data.nextCursorMark != ctx.cursorMark});
+								else
+									copyDocuments(ctx,data.response.docs,data.nextCursorMark && data.nextCursorMark != ctx.cursorMark);
+							}
+							//console.log(data);
+							if( data.nextCursorMark ){
+								if( ctx.cursorMark != data.nextCursorMark ){	
+									ctx.cursorMark = data.nextCursorMark;
+									if( ctx.commandLine.async ) loadQueryBatch(ctx);
+								}
+								else {
+									console.log("complete");
+									doCommit(ctx);
 								}
 							}
 						}
-						
+						catch(e){
+							//failed
+							console.log("failed to parse " + e);
+							loadQueryBatch(ctx);
+						}
 					}
-					
-					if( ctx.HANDLERS && ctx.HANDLERS["documents"] )
-						ctx.HANDLERS["documents"]({docs: data.response.docs,hasMore: data.nextCursorMark && data.nextCursorMark != ctx.cursorMark});
-					else
-						copyDocuments(ctx,data.response.docs,data.nextCursorMark && data.nextCursorMark != ctx.cursorMark);
-				}
-				//console.log(data);
-				if( data.nextCursorMark ){
-					if( ctx.cursorMark != data.nextCursorMark ){	
-						ctx.cursorMark = data.nextCursorMark;
-						if( ctx.commandLine.async ) loadQueryBatch(ctx);
-					}
-					else {
-						console.log("complete");
-						doCommit(ctx);
-					}
-				}
-			}
-			catch(e){
-				//failed
-				console.log("failed to parse " + e);
-				loadQueryBatch(ctx);
-			}
-		}
-  });
+			});
+	  }
 }
 
 function updateCallback(res) {
@@ -212,6 +226,8 @@ function doCommit(ctx){
 	t.on('error', function(e) {console.log("Got error: " + e.message);});
 	t.end();
 }
+
+
 
 loadQueryBatch(CONTEXT);
 
