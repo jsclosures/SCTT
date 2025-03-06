@@ -71,7 +71,7 @@ function queryCallback(res) {
 	  
 	  if( contentLength > ctx.maxStringLength ){
 		console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
-		ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
+		ctx.commandLine.batchSize = Math.min(ctx.commandLine.batchSize/2);
 		ctx.lastSize = 1;
 		loadQueryBatch(ctx);
 	  }
