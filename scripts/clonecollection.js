@@ -102,7 +102,7 @@ function queryCallback(res) {
 							if( ctx.commandLine.batchSize < ctx.commandLine.orignalSize ){
 								console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
 								ctx.lastSize = ctx.commandLine.batchSize;
-								ctx.commandLine.batchSize = Math.min(ctx.commandLine.maxBatchSize,ctx.commandLine.batchSize*2);
+								ctx.commandLine.batchSize = ctx.commandLine.orignalSize;
 							}
 							
 							if( data.response && data.response.docs ){
