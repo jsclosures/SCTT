@@ -138,8 +138,8 @@ function queryCallback(res) {
 						}
 						catch(e){
 							//failed
-							console.log("failed to parse " + e);
-							setTimeout(loadQueryBatch,1000,ctx);
+							console.log("failed to parse " + e + " " + str);
+							setTimeout(loadQueryBatch,5000,ctx);
 						}
 					}
 			});
