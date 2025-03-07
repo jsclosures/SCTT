@@ -139,7 +139,7 @@ function queryCallback(res) {
 						catch(e){
 							//failed
 							console.log("failed to parse " + e + " " + str);
-							setTimeout(loadQueryBatch,5000,ctx);
+							setTimeout(loadQueryBatch,60000,ctx);
 						}
 					}
 			});
