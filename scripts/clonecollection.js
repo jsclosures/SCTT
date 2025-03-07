@@ -3,10 +3,10 @@
 */
 const http = require('http');
 const https = require('https');
-const v8 = require('v8');
 
-const maxStringLength = v8.getHeapStatistics().heap_size_limit;
-console.log(`Maximum string length: ${maxStringLength}`);
+const maxStringLength = 1000000000;
+
+console.log("Maximum string length: " + maxStringLength);
 
 const commandLine = {};
 
@@ -25,6 +25,7 @@ process.argv.forEach((val, index) => {
 process.env.NODE_TLS_REJECT_UNAUTHORIZED=0;
 
 commandLine.batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchSize') ? commandLine['batchSize'] : 10;
+commandLine.maxBatchSize = Object.prototype.hasOwnProperty.call(commandLine,'maxBatchSize') ? commandLine['maxBatchSize'] : 2000;
 commandLine.sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 commandLine.sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
 
@@ -46,7 +47,7 @@ commandLine.debug = Object.prototype.hasOwnProperty.call(commandLine,'debug') ? 
 
 if( commandLine.debug > 0 ) console.log("commandline",commandLine);
 
-let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: 0,commandLine,lib: {http,https}};
+let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: commandLine.batchSize,commandLine,lib: {http,https}};
 
 let HANDLERS = false;
 
@@ -67,12 +68,13 @@ function queryCallback(res) {
 	let ctx = this.ctx;
 	let failed = false;
 	const contentLength = res.headers['content-length'];
-	  console.log(`Content-Length: ${contentLength}`);
+	  console.log("Content-Length: " + contentLength);
 	  
-	  if( contentLength > ctx.maxStringLength ){
-		console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
-		ctx.commandLine.batchSize = Math.min(ctx.commandLine.batchSize/2);
-		ctx.lastSize = 1;
+	  if( contentLength && contentLength > ctx.maxStringLength ){
+		console.log("init lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
+		ctx.lastSize = ctx.commandLine.batchSize;
+		ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
+		failed = true;
 		loadQueryBatch(ctx);
 	  }
 	  else {
@@ -81,9 +83,10 @@ function queryCallback(res) {
 					str += chunk;
 				}catch(e){
 					console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize);
+					ctx.lastSize = ctx.commandLine.batchSize;
 					ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
 					failed = true;
-					ctx.lastSize = str.length;
+					loadQueryBatch(ctx);
 				}     
 			});
 
@@ -97,10 +100,10 @@ function queryCallback(res) {
 						try {
 							let data = JSON.parse(str);
 
-							if( ctx.lastSize > 0 ){
+							if( ctx.lastSize != ctx.commandLine.batchSize ){
 								console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
-								ctx.commandLine.batchSize = ctx.commandLine.batchSize*2;
-								ctx.lastSize = 0;
+								ctx.lastSize = ctx.commandLine.batchSize;
+								ctx.commandLine.batchSize = Math.min(ctx.commandLine.maxBatchSize,ctx.commandLine.batchSize*2);
 							}
 							
 							if( data.response && data.response.docs ){
@@ -137,7 +140,7 @@ function queryCallback(res) {
 						catch(e){
 							//failed
 							console.log("failed to parse " + e);
-							loadQueryBatch(ctx);
+							seatTimeout(loadQueryBatch,1000,ctx);
 						}
 					}
 			});
@@ -200,6 +203,9 @@ function loadQueryBatch(ctx){
 	let tCallback = queryCallback.bind({ctx});
 	
 	let tSourceSolrPath = ctx.commandLine.sourceSolrPath + "&cursorMark=" + ctx.cursorMark + "&rows=" + ctx.commandLine.batchSize;
+
+	console.log("query: " + tSourceSolrPath);
+
 	let conf = {hostname: ctx.commandLine.sourceSolrHost,port: ctx.commandLine.sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
 
 	if( ctx.commandLine.authKey ){
