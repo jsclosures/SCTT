@@ -86,7 +86,6 @@ function queryCallback(res) {
 					ctx.lastSize = ctx.commandLine.batchSize;
 					ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
 					failed = true;
-					loadQueryBatch(ctx);
 				}     
 			});
 
@@ -140,7 +139,7 @@ function queryCallback(res) {
 						catch(e){
 							//failed
 							console.log("failed to parse " + e);
-							seatTimeout(loadQueryBatch,1000,ctx);
+							setTimeout(loadQueryBatch,1000,ctx);
 						}
 					}
 			});
