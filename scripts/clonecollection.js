@@ -85,7 +85,7 @@ function queryCallback(res) {
 					try{
 						str += chunk;
 					}catch(e){
-						console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize + " exp: " + e);
+						console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize + " exp: " + e + " size: " + str.length);
 						ctx.lastSize = ctx.commandLine.batchSize;
 						ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
 						failed = true;
