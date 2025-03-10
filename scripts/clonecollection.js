@@ -81,14 +81,16 @@ function queryCallback(res) {
 	  }
 	  else {
 			res.on('data', function (chunk) {
-				try{
-					str += chunk;
-				}catch(e){
-					console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize);
-					ctx.lastSize = ctx.commandLine.batchSize;
-					ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
-					failed = true;
-				}     
+				if( !failed ){
+					try{
+						str += chunk;
+					}catch(e){
+						console.log("payload too big so resizing and trying again " + ctx.commandLine.batchSize + " exp: " + e);
+						ctx.lastSize = ctx.commandLine.batchSize;
+						ctx.commandLine.batchSize = Math.round(ctx.commandLine.batchSize/2);
+						failed = true;
+					} 
+				}    
 			});
 
 			res.on('end', function () {
