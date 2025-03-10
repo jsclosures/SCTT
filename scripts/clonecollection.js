@@ -47,7 +47,9 @@ commandLine.debug = Object.prototype.hasOwnProperty.call(commandLine,'debug') ? 
 
 if( commandLine.debug > 0 ) console.log("commandline",commandLine);
 
-let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: commandLine.batchSize,orignalSize: commandLine.batchSize,commandLine,lib: {http,https}};
+commandLine.originalSize = commandLine.batchSize;
+
+let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: commandLine.batchSize,commandLine,lib: {http,https}};
 
 let HANDLERS = false;
 
@@ -99,10 +101,10 @@ function queryCallback(res) {
 						try {
 							let data = JSON.parse(str);
 
-							if( ctx.commandLine.batchSize < ctx.commandLine.orignalSize ){
-								console.log("lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
+							if( ctx.commandLine.batchSize < ctx.commandLine.originalSize ){
+								console.log("lastSize was set to " + ctx.batchSize + " reseting and doubling batchsize");
 								ctx.lastSize = ctx.commandLine.batchSize;
-								ctx.commandLine.batchSize = ctx.commandLine.orignalSize;
+								ctx.commandLine.batchSize = ctx.commandLine.originalSize;
 							}
 							
 							if( data.response && data.response.docs ){
