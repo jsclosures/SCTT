@@ -69,8 +69,11 @@ function queryCallback(res) {
 	let str = "";
 	let ctx = this.ctx;
 	let failed = false;
-	const contentLength = res.headers['content-length'];
-	  console.log("Content-Length: " + contentLength);
+	let contentLength = res.headers['Content-Length'];
+	if(!contentLength )
+		contentLength = res.headers['content-length'];
+	
+		console.log("Content-Length: " + contentLength);
 	  
 	  if( contentLength && contentLength > ctx.maxStringLength ){
 		console.log("init lastSize was set to " + ctx.lastSize + " reseting and doubling batchsize");
@@ -102,6 +105,7 @@ function queryCallback(res) {
 					else {
 						try {
 							let data = JSON.parse(str);
+							console.log("got " + str.length + " characters");
 
 							if( ctx.commandLine.batchSize < ctx.commandLine.originalSize ){
 								console.log("lastSize was set to " + ctx.batchSize + " reseting and doubling batchsize");
