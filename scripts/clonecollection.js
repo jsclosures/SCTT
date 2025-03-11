@@ -28,11 +28,12 @@ commandLine.batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchS
 commandLine.maxBatchSize = Object.prototype.hasOwnProperty.call(commandLine,'maxBatchSize') ? commandLine['maxBatchSize'] : 2000;
 commandLine.sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 commandLine.sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
+commandLine.sortDirection = Object.prototype.hasOwnProperty.call(commandLine,'sortDirection') ? commandLine['sortDirection'] : "asc";
 
 commandLine.sourceSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrHost') ? commandLine['sourceSolrHost'] : "localhost";
 commandLine.sourceSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPort') ? commandLine['sourceSolrPort'] : 8983;
 commandLine.sourceSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrCollection') ? commandLine['sourceSolrCollection'] : 'validate';
-commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+asc&q=" + commandLine.sourceSolrQuery;
+commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+" + sortDirection + "&q=" + commandLine.sourceSolrQuery;
 
 commandLine.destinationSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrHost') ? commandLine['destinationSolrHost'] : "localhost";
 commandLine.destinationSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrPort') ? commandLine['destinationSolrPort'] : 8983;
@@ -191,6 +192,16 @@ function commitCallback(res) {
   });
 }
 
+function failedHttpRequest(e){
+	console.log("Got error: " + e.message);
+
+	if( this.docs ){
+		setTimeout(copyDocuments,60000,this.ctx,this.docs,this.hasMore))
+	}
+	else
+		setTimeout(loadQueryBatch,60000,this.ctx);
+}
+
 function copyDocuments(ctx,docs,hasMore){
 	let tCallback = updateCallback.bind({ctx,hasMore});
 	//console.log("hasmore",hasMore);
@@ -201,7 +212,7 @@ function copyDocuments(ctx,docs,hasMore){
 	}
 		
 	let t = (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).request(conf, tCallback);
-	t.on('error', function(e) {console.log("Got error: " + e.message);});
+	t.on('error', failedHttpRequest.bind({ctx,docs,hasMore}));
 	t.write(JSON.stringify(docs));
 	t.end();
 }
@@ -220,7 +231,7 @@ function loadQueryBatch(ctx){
 	}
 
 	let t =  (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).request(conf, tCallback);
-	t.on('error', function(e) {console.log("Got error: " + e.message);});
+	t.on('error', failedHttpRequest.bind({ctx}));
 	t.end();
 }
 
