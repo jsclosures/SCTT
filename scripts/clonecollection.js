@@ -24,8 +24,9 @@ process.argv.forEach((val, index) => {
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED=0;
 
-commandLine.batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchSize') ? commandLine['batchSize'] : 10;
-commandLine.maxBatchSize = Object.prototype.hasOwnProperty.call(commandLine,'maxBatchSize') ? commandLine['maxBatchSize'] : 2000;
+commandLine.retryTimeout = Object.prototype.hasOwnProperty.call(commandLine,'retryTimeout') ? parseInt(commandLine['retryTimeout']) : 60000;
+commandLine.batchSize = Object.prototype.hasOwnProperty.call(commandLine,'batchSize') ? parseInt(commandLine['batchSize']) : 10;
+commandLine.maxBatchSize = Object.prototype.hasOwnProperty.call(commandLine,'maxBatchSize') ? parseInt(commandLine['maxBatchSize']) : 2000;
 commandLine.sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 commandLine.sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
 commandLine.sortDirection = Object.prototype.hasOwnProperty.call(commandLine,'sortDirection') ? commandLine['sortDirection'] : "asc";
@@ -33,7 +34,7 @@ commandLine.sortDirection = Object.prototype.hasOwnProperty.call(commandLine,'so
 commandLine.sourceSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrHost') ? commandLine['sourceSolrHost'] : "localhost";
 commandLine.sourceSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPort') ? commandLine['sourceSolrPort'] : 8983;
 commandLine.sourceSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrCollection') ? commandLine['sourceSolrCollection'] : 'validate';
-commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+" + sortDirection + "&q=" + commandLine.sourceSolrQuery;
+commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+" + commandLine.sortDirection + "&q=" + commandLine.sourceSolrQuery;
 
 commandLine.destinationSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrHost') ? commandLine['destinationSolrHost'] : "localhost";
 commandLine.destinationSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrPort') ? commandLine['destinationSolrPort'] : 8983;
@@ -148,7 +149,7 @@ function queryCallback(res) {
 						catch(e){
 							//failed
 							console.log("failed to parse " + e + " " + str);
-							setTimeout(loadQueryBatch,60000,ctx);
+							setTimeout(loadQueryBatch,ctx.retryTimeout,ctx);
 						}
 					}
 			});
@@ -196,10 +197,10 @@ function failedHttpRequest(e){
 	console.log("Got error: " + e.message);
 
 	if( this.docs ){
-		setTimeout(copyDocuments,60000,this.ctx,this.docs,this.hasMore))
+		setTimeout(copyDocuments,this.ctx.retryTimeout,this.ctx,this.docs,this.hasMore);
 	}
 	else
-		setTimeout(loadQueryBatch,60000,this.ctx);
+		setTimeout(loadQueryBatch,this.ctx.retryTimeout,this.ctx);
 }
 
 function copyDocuments(ctx,docs,hasMore){
