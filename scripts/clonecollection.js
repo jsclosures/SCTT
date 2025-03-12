@@ -107,7 +107,9 @@ function queryCallback(res) {
 					else {
 						try {
 							let data = JSON.parse(str);
-							console.log("got " + str.length + " characters");
+							let qtime = data?.responseHeader?.QTime;
+
+							console.log("got " + str.length + " characters with a qtime: " + qtime);
 
 							if( ctx.commandLine.batchSize < ctx.commandLine.originalSize ){
 								console.log("lastSize was set to " + ctx.batchSize + " reseting and doubling batchsize");
@@ -149,7 +151,7 @@ function queryCallback(res) {
 						catch(e){
 							//failed
 							console.log("failed to parse " + e + " " + str);
-							setTimeout(loadQueryBatch,ctx.retryTimeout,ctx);
+							setTimeout(loadQueryBatch,ctx.commandLine.retryTimeout,ctx);
 						}
 					}
 			});
@@ -197,10 +199,10 @@ function failedHttpRequest(e){
 	console.log("Got error: " + e.message);
 
 	if( this.docs ){
-		setTimeout(copyDocuments,this.ctx.retryTimeout,this.ctx,this.docs,this.hasMore);
+		setTimeout(copyDocuments,this.ctx.commandLine.retryTimeout,this.ctx,this.docs,this.hasMore);
 	}
 	else
-		setTimeout(loadQueryBatch,this.ctx.retryTimeout,this.ctx);
+		setTimeout(loadQueryBatch,this.ctx.commandLine.retryTimeout,this.ctx);
 }
 
 function copyDocuments(ctx,docs,hasMore){
