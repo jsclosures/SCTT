@@ -30,11 +30,12 @@ commandLine.maxBatchSize = Object.prototype.hasOwnProperty.call(commandLine,'max
 commandLine.sourceSolrIdField = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrIdField') ? commandLine['sourceSolrIdField'] : "id";
 commandLine.sourceSolrQuery = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrQuery') ? commandLine['sourceSolrQuery'] : "*:*";
 commandLine.sortDirection = Object.prototype.hasOwnProperty.call(commandLine,'sortDirection') ? commandLine['sortDirection'] : "asc";
+commandLine.filter = Object.prototype.hasOwnProperty.call(commandLine,'filter') ? commandLine['filter'] : "";
 
 commandLine.sourceSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrHost') ? commandLine['sourceSolrHost'] : "localhost";
 commandLine.sourceSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPort') ? commandLine['sourceSolrPort'] : 8983;
 commandLine.sourceSolrCollection = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrCollection') ? commandLine['sourceSolrCollection'] : 'validate';
-commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&sort=" + commandLine.sourceSolrIdField + "+" + commandLine.sortDirection + "&q=" + commandLine.sourceSolrQuery;
+commandLine.sourceSolrPath = Object.prototype.hasOwnProperty.call(commandLine,'sourceSolrPath') ? commandLine['sourceSolrPath'] : "/solr/" + commandLine.sourceSolrCollection + "/select?wt=json&" + (commandLine.filter ? "fq=" + commandLine.filter + "&" : "") + "sort=" + commandLine.sourceSolrIdField + "+" + commandLine.sortDirection + "&q=" + commandLine.sourceSolrQuery;
 
 commandLine.destinationSolrHost = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrHost') ? commandLine['destinationSolrHost'] : "localhost";
 commandLine.destinationSolrPort = Object.prototype.hasOwnProperty.call(commandLine,'destinationSolrPort') ? commandLine['destinationSolrPort'] : 8983;
