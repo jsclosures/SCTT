@@ -121,6 +121,7 @@ function queryCallback(res) {
 							
 							if( data.response && data.response.docs ){
 								ctx.stats.queried += data.response.docs.length;
+								ctx.stats.numFound = data.response.numFound;
 
 								for(let d in data.response.docs){
 									let doc = data.response.docs[d];
