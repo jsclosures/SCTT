@@ -52,7 +52,7 @@ if( commandLine.debug > 0 ) console.log("commandline",commandLine);
 
 commandLine.originalSize = commandLine.batchSize;
 
-let CONTEXT = {cursorMark:"*",maxStringLength,lastSize: commandLine.batchSize,commandLine,lib: {http,https}};
+let CONTEXT = {stats: {queried: 0,loaded: 0},cursorMark:"*",maxStringLength,lastSize: commandLine.batchSize,commandLine,lib: {http,https}};
 
 let HANDLERS = false;
 
@@ -109,6 +109,7 @@ function queryCallback(res) {
 						try {
 							let data = JSON.parse(str);
 							let qtime = data?.responseHeader?.QTime;
+							
 
 							console.log("got " + str.length + " characters with a qtime: " + qtime);
 
@@ -119,6 +120,8 @@ function queryCallback(res) {
 							}
 							
 							if( data.response && data.response.docs ){
+								ctx.stats.queried += data.response.docs.length;
+
 								for(let d in data.response.docs){
 									let doc = data.response.docs[d];
 									for( let p in doc){
@@ -163,6 +166,7 @@ function updateCallback(res) {
 	let str = "";
 	let hasMore = this.hasMore;
 	let ctx = this.ctx;
+	let docCount = this.docCount;
 
   res.on('data', function (chunk) {
               str += chunk;
@@ -170,7 +174,8 @@ function updateCallback(res) {
         });
 
   res.on('end', function () {
-        if( ctx.commandLine.debug > 0 ) console.log("UPDATE",hasMore,str);
+		if( ctx.commandLine.debug > 0 ) console.log("UPDATE",hasMore,str);
+		ctx.stats.loaded += docCount;
 	if( !ctx.commandLine.async && hasMore ){
 		loadQueryBatch(ctx);
 	}
@@ -188,7 +193,7 @@ function commitCallback(res) {
 
   res.on('end', function () {
         console.log("COMMIT",str);
-
+	console.log("stats: " + JSON.stringify(ctx.stats));
 	if( ctx.commandLine.runForever ){
 		ctx.cursorMark = "*";
 		loadQueryBatch(ctx);
@@ -207,7 +212,7 @@ function failedHttpRequest(e){
 }
 
 function copyDocuments(ctx,docs,hasMore){
-	let tCallback = updateCallback.bind({ctx,hasMore});
+	let tCallback = updateCallback.bind({ctx,hasMore,docCount: docs.length});
 	//console.log("hasmore",hasMore);
 	let conf = {hostname: ctx.commandLine.destinationSolrHost,port: ctx.commandLine.destinationSolrPort,path: ctx.commandLine.destinationSolrUpdatePath,method: 'POST',headers: {'Content-Type': 'application/json'}}
 
@@ -216,7 +221,7 @@ function copyDocuments(ctx,docs,hasMore){
 	}
 		
 	let t = (ctx.commandLine.sslMode ? ctx.lib.https : ctx.lib.http).request(conf, tCallback);
-	t.on('error', failedHttpRequest.bind({ctx,docs,hasMore}));
+	t.on('error', failedHttpRequest.bind({ctx,docs,hasMore,docCount: docs.length}));
 	t.write(JSON.stringify(docs));
 	t.end();
 }
