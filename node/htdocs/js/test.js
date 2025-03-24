@@ -248,6 +248,7 @@ var CONTENTTYPE = "TEST";
     context.clearLabel = uiManager.getString("clearTest");
     context.duplicateLabel = uiManager.getString("duplicateTest");
     context.customLabel = uiManager.getString("deleteAllTestData");
+    context.exportLabel = uiManager.getString("exportAllTests");
     context.formCustomClass = "crudForm";
     context.autoQuery = false;
     context.params = {};
@@ -431,6 +432,43 @@ var CONTENTTYPE = "TEST";
         }
     };
     
+    context.exportAction = function(e,oldRec,newRec)
+    {
+        console.log(newRec);
+        if( true ){
+            console.log("export all tests");
+            var callback = function(data){
+                let a = document.createElement("a");
+                a.style.display = "none";
+                document.body.appendChild(a);
+                let type = "application/json";
+                // Set the HREF to a Blob representation of the data to be downloaded
+                a.href = window.URL.createObjectURL(
+                    new Blob([data], { type })
+                );
+
+                // Use download attribute to set set desired file name
+                a.setAttribute("download", "alltests.json");
+
+                // Trigger the download by simulating click
+                a.click();
+
+                // Cleanup
+                window.URL.revokeObjectURL(a.href);
+                document.body.removeChild(a);
+            };
+
+            var dataService = getDataService(restURL, callback, "", "");
+                        var payload = {};
+                        payload.contenttype = "EXPORTALLTEST";
+                        payload.action = "GET";
+                        dataService["post"](payload, payload,"text",{
+                            "Content-Type" : "application/json",
+                            "Accept" : "application/json"
+                        });
+        }
+    };
+
     context.deleteAction = function(e,oldRec,newRec)
     {
         //console.log('delete: ' + oldRec.name);

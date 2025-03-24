@@ -739,6 +739,21 @@ function buildForm(context) {
 
 			registeredWidgets.push(customButton.id);
 			registerEventHandler(customButton, "onClick", customAction);
+
+
+			var exportButton = new dijit.form.Button({
+				label : context.exportLabel ? context.exportLabel : 'Eport',
+				showLabel : true,
+				iconClass : "dijitEditorIcon dijitEditorIcon" + 'eport',
+				id : formName + 'export'
+			});
+			toolbar.addChild(exportButton);
+
+			if (!context.exportLabel)
+				hideDojoWidget(true, exportButton.id);
+
+			registeredWidgets.push(exportButton.id);
+			registerEventHandler(exportButton, "onClick", exportAction);
 		} else
 			context.customToolbar(toolbar);
 
@@ -938,6 +953,45 @@ function buildForm(context) {
 			newRec.id = oldRec.id;
 
 			context.customAction(e, oldRec, newRec);
+
+			target = newRec;
+			if (fObj && fObj.restartChild)
+				fObj.restartChild();
+		}
+
+	}
+
+	function exportAction(e) {
+		var fObj = dijit.byId(mainId);
+
+		if (showGrid) {
+			var gObj = dijit.byId(gridName);
+			var items = gObj.selection.getSelected();
+			//console.log("checking selected items " + items.length);
+			if (items.length > 0 && items[0]) {
+				var oldRec = items[0];
+				var newRec = internalReadForm();
+				newRec.id = oldRec.id;
+				//console.log("existing item id: " + newRec.id);
+				context.exportAction(e, oldRec, newRec);
+
+				//fObj.restartChild();
+			} else {
+				//console.log("nothing selected");
+
+				var newRec = internalReadForm();
+				var oldRec = newRec;
+
+				context.exportAction(e, oldRec, newRec);
+
+				//fObj.restartChild();
+			}
+		} else {
+			var oldRec = target;
+			var newRec = internalReadForm();
+			newRec.id = oldRec.id;
+
+			context.exportAction(e, oldRec, newRec);
 
 			target = newRec;
 			if (fObj && fObj.restartChild)

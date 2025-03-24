@@ -882,6 +882,67 @@ var HANDLERS = {
 
 		return (result);
 	},
+	"EXPORTALLTEST": function (args) {
+		let result = { status: 1, message: "HANDLED" };
+
+		let CONTEXT = args.CONTEXT;
+		let solrHost = CONTEXT.SOLRHOST;
+		let solrPort = CONTEXT.SOLRPORT;
+		let solrCollection = CONTEXT.SOLRCOLLECTION;
+		let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype=TEST&&wt=json&indent=on";
+
+		if (args.queryObj._rows)
+			solrPath += '&rows=' + (args.queryObj._rows);
+		else
+			solrPath += '&rows=100000';
+
+		solrPath += '&sort=testname+asc';
+
+		if (CONTEXT.DEBUG > 1) console.log("solrpath", solrPath);
+
+		let callback = function (res) {
+			let str = "";
+
+			res.on('data', function (chunk) {
+				str += chunk;
+			});
+
+			res.on('end', function () {
+				if ( CONTEXT.DEBUG > 1) console.log("export complete", str);
+				let data = JSON.parse(str);
+
+				if( data.response && data.response.docs ){
+					for(let rec of data.respnse.docs){
+						delete rec["_version_"];
+					}
+				}
+
+				data = {docs: data.response.docs};
+
+				args.callback({ payload: JSON.stringify(data), headers: [{ name: "Content-Type", value: "application/force-download" }, { name: "Content-Length", value: str.length }, { name: "Content-Type", value: "application/json" }, { name: "Content-Disposition", value: "attachment; filename=alltests.json" }] });
+			});
+		}
+		let tCallback = callback;
+
+		let tUrl = solrPath.replace(/ /g, "%20");
+
+		if (CONTEXT.DEBUG > 1) console.log('solr path', tUrl);
+
+		let config = { host: solrHost, port: solrPort, path: tUrl,method: "GET", headers: { 'Content-Type': 'application/json' } };
+
+		if (CONTEXT.DEBUG > 1) console.log('config', config);
+
+		if (CONTEXT.AUTHKEY)
+			config.headers["Authorization"] = "Basic " + CONTEXT.AUTHKEY;
+		let transport = CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http;
+		let t = transport.request(config, tCallback);
+		t.on('error', function (e) {
+			if (CONTEXT.DEBUG > 0) console.log("Got error: " + e.message);
+			args.callback({ error: e.message });
+		});
+
+		return (result);
+	},
 	"DELETEALL": function (args) {
 		let result = { status: 1, message: "HANDLED" };
 
