@@ -17,7 +17,8 @@ function(commandLine){
     const useAsSeed  = commandLine.hasOwnProperty('useAsSeed') ? commandLine['useAsSeed'] === 'true' : true;
     const seedTemplate = commandLine.hasOwnProperty('seedTemplate') ? commandLine['seedTemplate'] : '';
     const csvData  = commandLine.hasOwnProperty('csvData') ? commandLine['csvData'].replace(/\+/g,' ') : false;
-    
+    const username  = commandLine.hasOwnProperty('username') ? commandLine['username']: "";
+
     function callback(res) {
     
         let str = "";
@@ -137,7 +138,13 @@ function(commandLine){
         if( useAsSeed ){
             let tRec = {id: idSeed + testName + rowCounter,"contenttype": 'SEARCH',"testname": testName};
             tRec["query_txt"] = seedTemplate + line;
+
+
+            if( username ){
+                tRec["username_s"] = username;
+            }
             //console.log("data",tRec);
+
             rowList.push(tRec);
             
             if( rowList.length > batchSize ){
@@ -147,7 +154,7 @@ function(commandLine){
         }
         else {
           let idx = -1;
-          if( line.indexOf("http:") < 0 && ( !requiredTag || line.indexOf(requiredTag) > -1 ) && (idx = line.indexOf(startTag)) > -1 ){
+          if( line.indexOf("http:") < 0 && ( !requiredTag || line.indexOf(requiredTag) > -1 ) && (!startTag || (idx = line.indexOf(startTag)) > -1) ){
               line = line.substring(idx+startTag.length);
               if(  keyTag && (idx = line.indexOf(keyTag)) > -1 ){
                   line = line.substring(idx+keyTag.length).trim();
@@ -164,6 +171,10 @@ function(commandLine){
                   let tRec = {id: idSeed + testName + rowCounter,"contenttype": 'SEARCH',"testname": testName};
                   //tRec["query_txt"] = line;
               tRec["query_txt"] = getRequiredParams(line);
+
+              if( username ){
+                tRec["username_s"] = username;
+              }
                   //console.log("data",tRec);
                   rowList.push(tRec);
                   

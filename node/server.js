@@ -59,6 +59,7 @@ let HTTPSSOLR = false;
 let SOLRPREFIX = "/solr/";
 let IGNORESSLCHECK = true;
 let IGNORELOGIN = false;
+let USERSPECIFIC = false;
 
 let commandLine = {};
 
@@ -134,6 +135,8 @@ if (Object.prototype.hasOwnProperty.call(commandLine, "worker"))
 	WORKER = commandLine.worker;
 else
 	WORKER = WORKER + new Date().getTime();
+if (Object.prototype.hasOwnProperty.call(commandLine, "userspecific"))
+	USERSPECIFIC = commandLine.userspecific == "true";
 
 if( IGNORESSLCHECK )
 	process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -154,6 +157,7 @@ const CONTEXT = {
 	LEADER: LEADER,
 	LEADERCHECK: LEADERCHECK,
 	WORKER: WORKER,
+	USERSPECIFIC: USERSPECIFIC,
 	lib: {
 		http: http,
 		https: https,
@@ -348,6 +352,7 @@ function actualHandleRequest(request, response, bodyData) {
 	writeLog(1, "handle request");
 	let result = { status: 0 };
 
+	let cookieObj = parseCookies(request);
 	let requestUrl = request.url;
 	let requestObj = url.parse(requestUrl, true);
 	let queryObj = requestObj.query;
@@ -449,6 +454,9 @@ function actualHandleRequest(request, response, bodyData) {
 	}
 	else if (pathname === '/restservice') {
 		//handle auth request
+		if (cookieObj.zen || IGNORELOGIN ) {
+			queryObj._username = cookieObj.zen;
+		}
 		writeLog(1, "contentType " + contentType);
 		if (Object.prototype.hasOwnProperty.call(HANDLERS, contentType)) {
 			let handlerCallback = function (resp) {
@@ -715,8 +723,6 @@ function replaceAll(str, find) {
 
 	return (str.replace(re, ''));
 }
-
-CONTEXT.lib.getRESTData = getRESTData;
 
 function loadAsset(assetName, callback, assetType) {
 

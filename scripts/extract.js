@@ -26,6 +26,8 @@ function(oCommandLine){
 	const validateSolrIdField = commandLine.hasOwnProperty('validateSolrIdField') ? commandLine['validateSolrIdField'] : "id";
 	const includeDetail = commandLine.hasOwnProperty('includeDetail') ? commandLine['includeDetail'] : '';
 	const writeMode = commandLine.hasOwnProperty('writeMode') ? commandLine['writeMode'] : 'truncate';
+	const username = commandLine.hasOwnProperty('username') ? commandLine['username'] : '';
+	
 	let cursorMark = "*";
 	let queryCount = 0;
 		
@@ -186,6 +188,10 @@ function(oCommandLine){
 							source: sourceSolrHost + '-' + sourceSolrCollection
 						};
 						newDoc[validateSolrTypeField] = validateSolrType;
+
+						if( CONTEXT.USERSPECIFIC ){
+							newDoc["username_s"] = username;
+						}
 			if( data ){
 				let docList = false;
 				if( sourceMode == 'COVEO' ){

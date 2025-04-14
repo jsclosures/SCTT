@@ -27,7 +27,9 @@ var HANDLERS = {
 			eval('scriptToExecute = ' + script + ";");
 
 			let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseArgs(this.args.queryObj.input) : this.args;
-
+			if( CONTEXT.USERSPECIFIC ){
+				sendArgs["username"] = args.queryObj._username;
+			}
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 			try {
 				scriptToExecute(sendArgs);
@@ -60,6 +62,10 @@ var HANDLERS = {
 			eval('scriptToExecute = ' + script + ";");
 
 			let sendArgs = this.args;
+
+			if( CONTEXT.USERSPECIFIC ){
+				sendArgs["username"] = args.queryObj._username;
+			}
 
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 
@@ -96,6 +102,10 @@ var HANDLERS = {
 			eval('scriptToExecute = ' + script + ";");
 
 			let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseArgs(this.args.queryObj.input) : this.args;
+
+			if( CONTEXT.USERSPECIFIC ){
+				sendArgs["username"] = args.queryObj._username;
+			}
 
 			if (CONTEXT.DEBUG > 1) console.log("sendArgs", sendArgs);
 
@@ -147,6 +157,10 @@ var HANDLERS = {
 
 				let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseRunnerArgs(this.args.queryObj.input) : this.args;
 
+				if( CONTEXT.USERSPECIFIC ){
+					sendArgs["username"] = args.queryObj._username;
+				}
+
 				sendArgs.callback = args.callback;
 
 				result.message = "executed " + this.type + " in " + test.testname;
@@ -187,6 +201,10 @@ var HANDLERS = {
 		if (args.queryObj.headeronly) {
 			contentType = "SUMMARYHEADER";
 			solrPath = CONTEXT.SOLRPREFIX + CONTEXT.SOLRCOLLECTION + "/select?q=*:*&wt=json&indent=on";
+		}
+
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;;
 		}
 
 		solrPath += "&fq=contenttype:" + contentType;
@@ -298,6 +316,9 @@ var HANDLERS = {
 			if (parentId) {
 				solrPath += "&fq=parentid:(" + parentId + ")";
 			}
+			if( CONTEXT.USERSPECIFIC ){
+				solrPath += "&fq=username_s:" + args.queryObj._username;
+			}
 			solrPath += "&fq=contenttype:BEFORE+OR+contenttype:AFTER";
 			console.log("solrpath",solrPath);
 
@@ -381,6 +402,10 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
+
 		if (testName) {
 			solrPath += "&fq=testname:" + testName;
 		}
@@ -460,6 +485,9 @@ var HANDLERS = {
 		if (action === "GET") {
 			let solrPath = CONTEXT.SOLRPREFIX + solrCollection + "/select?q=*:*&fq=contenttype:FEEDBACK&wt=json&indent=on";
 
+			if( CONTEXT.USERSPECIFIC ){
+				solrPath += "&fq=username_s:" + args.queryObj._username;
+			}
 			if (args.queryObj._start)
 				solrPath += '&start=' + args.queryObj._start;
 
@@ -751,6 +779,10 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
+
 		if (testName) {
 			solrPath += "&fq=testname:" + testName;
 		}
@@ -835,6 +867,10 @@ var HANDLERS = {
 
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
+
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
 
 		if (testName) {
 			solrPath += "&fq=contenttype:SUMMARY&fq=testname:" + testName;
@@ -957,6 +993,9 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
 
 		if (CONTEXT.DEBUG > 1) console.log("solrpath", solrPath);
 
@@ -1015,6 +1054,9 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
 		if (testName) {
 			solrPath += "&fq=testname:" + testName;
 		}
@@ -1057,6 +1099,10 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
+		if( CONTEXT.USERSPECIFIC ){
+			solrPath += "&fq=username_s:" + args.queryObj._username;
+		}
+
 		let getTestCallback = function (test) {
 			//console.log(test);
 
@@ -1071,7 +1117,9 @@ var HANDLERS = {
 				eval('scriptToExecute = ' + script + ";");
 	
 				let sendArgs = this.args.queryObj.input ? CONTEXT.lib.parseRunnerArgs(this.args.queryObj.input) : this.args;
-
+				if( CONTEXT.USERSPECIFIC ){
+					sendArgs["username"] = args.queryObj._username;
+				}
 				//console.log("sendArgs",sendArgs);
 
 				try {
