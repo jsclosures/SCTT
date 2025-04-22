@@ -954,6 +954,22 @@ function hideObjectDialog() {
         objectDialog.hide();
 }
 
+getCurrentContext().deregisterDataChangeListener = function(listener){
+    var listenerCache = getCurrentContext().listenerCache;
+    
+    if( !listenerCache ){
+      for(let idx in listenerCache){
+          if( listenerCache[idx].id == listener.id ){
+            listeners.splice(idx, 1);
+            break;
+          }
+      }
+      getCurrentContext().listenerCache = listenerCache;
+    }
+    
+    listenerCache.push(listener);
+}
+
 getCurrentContext().registerDataChangeListener = function(listener){
     var listenerCache = getCurrentContext().listenerCache;
     

@@ -55,6 +55,7 @@ var context = {};
     context.showGrid = false;
     context.integrateGrid = false;
     context.saveLabel = uiManager.getString("runScript");
+    context.exportLabel = uiManager.getString("deleteAllTestData");
     context.formCustomClass = "crudForm";
     context.autoQuery = false;
     context.params = {};
@@ -62,9 +63,9 @@ var context = {};
     
     var typeStoreData = {
         identifier : 'abbr', label : 'name', items : [
+    {abbr : "testbuildscript", name : uiManager.getString('testbuildscript')},
 	{abbr : "testharvestscript", name : uiManager.getString('testharvestscript')},
 	{abbr : "testcopyscript", name : uiManager.getString('testcopyscript')},
-	{abbr : "testbuildscript", name : uiManager.getString('testbuildscript')},
 	{abbr : "testextractscript", name : uiManager.getString('testextractscript')},
 	{abbr : "testsummaryscript", name : uiManager.getString('testsummaryscript')}]
     };
@@ -77,8 +78,8 @@ var context = {};
         let test = getCurrentContext().getCurrentTest().test;
          
         for(let i in typeStoreData.items){
-            if( currentType == typeStoreData.items[i].abbr){
-                let commandStr = test[currentType+"_s"];
+            if( context.currentType == typeStoreData.items[i].abbr){
+                let commandStr = test[context.currentType+"_s"];
                 if( commandStr ){
                     let commandList = commandStr.split(" ");
                     for(let c in commandList){
@@ -173,7 +174,7 @@ var context = {};
         
         return( result );
     }
-    var currentType = typeStoreData.items[0].abbr;
+    context.currentType = typeStoreData.items[0].abbr;
     function getFieldList(){
         let result = getTestFields();
 
@@ -183,7 +184,7 @@ var context = {};
     function scriptChange(evt){
         console.log("changed",evt);
         destroyArgumentForm();
-        currentType = evt;
+        this.context.currentType = evt;
         buildArgumentForm();
     }
 
@@ -196,7 +197,7 @@ var context = {};
         type: 'SELECT',
         store: typeStore,
         searchAttr: 'name',
-        onChange: scriptChange
+        onChange: scriptChange.bind({mainId,context})
     },
     {
         type: 'CUSTOM',
@@ -318,6 +319,36 @@ var context = {};
         let tObj = dijit.byId(mainId + "output");
         tObj.attr("value",'');
     };
+
+    context.exportAction = function(e,oldRec,newRec)
+    {
+        let test = getCurrentContext().getCurrentTest().test;
+
+        if( test.testname ){
+            var callback = function(mode,args){    
+                if( mode ) {
+                   setBusy(true,uiManager.getString("pleaseWait"));
+                    
+                    var cb = function(data){
+                        console.log("callback from delete all",data);
+                        setBusy();
+                    };
+
+                    var dataService = getDataService(restURL, cb, "", "");
+                    var payload = {testname: this.testname}; 
+                    console.log("delete payload",payload);
+                    payload.contenttype = "DELETEALL";
+                    payload.action = "POST";
+                    dataService["post"](payload, payload);
+               }
+           }
+                               
+            showModalDialog(uiManager.getString("modalDialogTitle"),uiManager.getString("testConfirmDeleteAllDataMessage"),callback.bind({testname: test.testname}),oldRec);
+        }
+        else {
+            showAlertMessageDialog(uiManager.getString("testUnableToDeleteAll"));
+        }
+    };
     
     var formHeight = dojo.isIE ? 450 : 480;
     
@@ -359,12 +390,28 @@ var context = {};
         
     var lifecycle = {};
     
+    lifecycle.dataChange = function(changeData){
+        //var fObj = anyWidgetById(this.mainId);
+        //fObj.restartChild();
+
+        scriptChange.bind({context: this.context})(this.context.currentType);
+
+    }.bind({parentId,mainId,context});
+
     lifecycle.resizeDisplay = function(){
 
-    }
-    
-    anyWidgetById(parentId).lifecycle = lifecycle;
-	
+    }.bind({parentId});
 
+    lifecycle.startChild = function(){
+        getCurrentContext().registerDataChangeListener(anyWidgetById(this.mainId));
+    }.bind({parentId,mainId});
+
+    lifecycle.destroyChild = function(){
+        getCurrentContext().deregisterDataChangeListener(anyWidgetById(this.mainId));
+    }.bind({parentId,mainId});
+    
+    anyWidgetById(mainId).lifecycle = lifecycle;
+	
+    lifecycle.startChild();
 
 }

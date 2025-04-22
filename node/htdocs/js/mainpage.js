@@ -119,11 +119,11 @@ function internalBuildMainPage(mainContext, mainId) {
                                     
                                     var doLater = function(){
                                     	var doFinally = function(){
-                                    		dojo.eval(buildwith + "('" + mainId + "','" + itemName + "')")
-                                    	}
+											dojo.eval(buildwith + "('" + mainId + "','" + itemName + "')");
+                                    	}.bind({cId: this.cId,itemName: this.itemName});
                                     	
                                     	setTimeout(doFinally,100);
-                                    }
+                                    }.bind({cId,itemName});
                                     
                                     require([this.loadfile],
                                		     function(){
@@ -237,16 +237,28 @@ function internalBuildMainPage(mainContext, mainId) {
         }
 
         context.startChild = function () {
-		var cContext = getCurrentContext();
-		var uiManager = getCurrentContext().UIProfileManager;
-            
-		var mainContainer = anyWidgetById(mainName);
-                                                                                                
-                
+			var cContext = getCurrentContext();
+			var uiManager = getCurrentContext().UIProfileManager;
+				
+			var mainContainer = anyWidgetById(mainName);
+
+			for(var i =0;i < tabList.length;i++){
+				var fObj = anyWidgetById(tabList[i].id);
+
+				if( fObj && fObj.lifecycle && fObj.lifecycle.startChild ){
+					fObj.lifecycle.startChild();
+				}
+			}                                                                                     
         }
 
         context.stopChild = function () {
-		
+			for(var i =0;i < tabList.length;i++){
+				var fObj = anyWidgetById(tabList[i].id);
+
+				if( fObj && fObj.lifecycle && fObj.lifecycle.stopChild ){
+					fObj.lifecycle.stopChild();
+				}
+			} 
         }
 
         context.destroyChild = function () {
@@ -270,6 +282,8 @@ function internalBuildMainPage(mainContext, mainId) {
 			console.log("test selector",resolveObject(evt));
 			//if( getCurrentContext().handleTestGraphChange )
 			//	getCurrentContext().handleTestGraphChange(resolveObject(evt));
+
+			getCurrentContext().notifyDataChange({sourceId: this.mainId});
 	}
     
     
@@ -296,7 +310,7 @@ function internalBuildMainPage(mainContext, mainId) {
 					tabindex : 1,
 					width : "20",
 					xstyle : "width:auto;",
-					onChange : onTestSelectorChange
+					onChange : onTestSelectorChange.bind({mainId})
 				});
 		testSelectorContainer.addChild(testSelector);
 		
