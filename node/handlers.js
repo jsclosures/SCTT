@@ -1099,10 +1099,6 @@ var HANDLERS = {
 		if (args.queryObj.testname)
 			testName = args.queryObj.testname;
 
-		if( CONTEXT.USERSPECIFIC ){
-			solrPath += "&fq=username_s:" + args.queryObj._username;
-		}
-
 		let getTestCallback = function (test) {
 			//console.log(test);
 
