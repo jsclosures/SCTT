@@ -206,7 +206,7 @@ var CONTENTTYPE = "TEST";
         
         setBusy(false);
 
-        getCurrentContext().loadTestStoreData();
+        setTimeout(getCurrentContext().loadTestStoreData,1000);
     }
     
     function deleteDataCallback(data) {
@@ -229,6 +229,8 @@ var CONTENTTYPE = "TEST";
         }
         
         setBusy(false);
+
+        setTimeout(getCurrentContext().loadTestStoreData,1000);
     }
 			  
     var context = {};
