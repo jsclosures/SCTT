@@ -19,7 +19,8 @@ function(commandLine){
     const validateSolrUpdatePath = commandLine.hasOwnProperty('validateSolrUpdatePath') ? commandLine['validateSolrUpdatePath'] : CONTEXT.SOLRPREFIX + "validate/update";
     const validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
     const validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "SUMMARY";
-    
+    const username = commandLine.hasOwnProperty('username') ? commandLine['username'] : '';
+
     let missingSentinal = commandLine.hasOwnProperty('missingSentinal') ? commandLine['missingSentinal'] : -1000;
     
     let cursorMark = "*";
@@ -151,6 +152,9 @@ function(commandLine){
             let newDoc = {"id": validateSolrType + doc.id,"parentid": doc.id,"query_txt": doc["query_txt"],testname: doc["testname"],languageid: doc["languageid"],"channelid": doc["channelid"]};
             newDoc[validateSolrTypeField] = validateSolrType;
             newDoc["rowcount"] = data.response && data.response.numFound ? data.response.numFound : 0;
+            if( CONTEXT.USERSPECIFIC ){
+                newDoc["username_s"] = username;
+            }
             
             if( data.response && data.response.numFound > 1 ){
                 let beforeRec = data.response.docs[0];
@@ -219,6 +223,9 @@ function(commandLine){
         let tCallback = queryCallback.bind({queryDoc: doc,hasMore: hasMore,ctx});
         //console.log(doc);
         let tSourceSolrPath = sourceSolrPath + "&fq=" + sourceFilterQuery + "&q=parentid:" + doc["id"];
+        if( username ){
+            tSourceSolrPath += "&fq=username_s:" + username;
+        }
         //console.log(tSourceSolrPath);
             let conf = {hostname: sourceSolrHost,port: sourceSolrPort,path: encodeURI(tSourceSolrPath),method: 'GET',headers: {'Content-Type': 'application/json'}};
             if( CONTEXT.AUTHKEY )

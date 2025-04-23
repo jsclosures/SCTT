@@ -8,7 +8,8 @@ function(commandLine){
     const validateSolrPath = commandLine.hasOwnProperty('validateSolrPath') ? commandLine['validateSolrPath'] : "/api/solr/" + validateSolrCollection + "/select?q=(contenttype:SUMMARY+AND+testname:" + testName + ")&wt=json&sort=id+desc&rows=" + batchSize;
     const validateSolrTypeField = commandLine.hasOwnProperty('validateSolrTypeField') ? commandLine['validateSolrTypeField'] : "contenttype";
     const validateSolrType = commandLine.hasOwnProperty('validateSolrType') ? commandLine['validateSolrType'] : "SUMMARY";
-    
+    const username = commandLine.hasOwnProperty('username') ? commandLine['username'] : '';
+
     var cursorMark = "*";
     var queryCount = 0;
     const LOOPCTX = {offset: 0,docs: [],size: 0,buffer: "query,environment,delta,rowcount,doc"}; 
@@ -142,6 +143,9 @@ function(commandLine){
         let tCallback = validateCallback.bind({ctx});
         
         let tValidateSolrPath = validateSolrPath + "&cursorMark=" + cursorMark;
+        if( username ){
+            tValidateSolrPath += "&fq=username_s:" + username;
+        }
         console.log(tValidateSolrPath);
         let conf = {hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: {'Content-Type': 'application/json'}};
     

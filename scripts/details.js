@@ -12,6 +12,11 @@ function(commandLine,callback){
 			if( testName ){
 				solrPath += "&fq=testname:" + testName;
 			}
+
+			if( commandLine.username ){
+				solrPath += "&fq=username_s:" + commandLine.username;
+			}
+
 			let finalResult = {items: []};
 	
 			const collectorCB = function(data){
