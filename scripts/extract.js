@@ -74,7 +74,7 @@ function(oCommandLine){
 						cursorMark = data.nextCursorMark;
 					}
 					else {
-						console.wslog("complete");
+						console.wslog({type: "utf8",username,utf8data: "complete"});
 					}
 				}
 
@@ -102,11 +102,11 @@ function(oCommandLine){
 			});
 
 	  res.on('end', function () {
-			console.wslog(queryDoc.id,"UPDATE",str);
+			console.wslog({type: "utf8",username,utf8data: queryDoc.id +  " UPDATE " + str});
 			
-			console.wslog("checking query count",queryCount);
+			console.wslog({type: "utf8",username,utf8data: "checking query count " + queryCount});
 			if( queryCount <= 0 ) {
-				console.wslog("call load sybc",hasMore);
+				console.wslog({type: "utf8",username,utf8data: "call load sybc " + hasMore});
 				
 				/*if( hasMore )
 					loadValidationData(cursorMark);
@@ -125,7 +125,7 @@ function(oCommandLine){
 			});
 
 	  res.on('end', function () {
-			console.wslog("COMMIT");
+			console.wslog({type: "utf8",username,utf8data: "COMMIT"});
 	  });
 	}
 
@@ -173,7 +173,7 @@ function(oCommandLine){
 				data = JSON.parse(str);
 			}
 			catch(e) {
-				console.wslog("read failed: " + e);
+				console.wslog({type: "utf8",username,utf8data: "read failed: " + e});
 			}
 
 			let docDetailList = [];
@@ -253,7 +253,7 @@ function(oCommandLine){
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
 
 			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath,method: 'POST',headers: headers}, tCallback);
-			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+			t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 			t.write(JSON.stringify(docDetailList));
 			t.end();
 			
@@ -281,30 +281,30 @@ function(oCommandLine){
 		
 		if( sourceMode == 'COVEO' ){
 			let payload  = {q: queryStr,pipeline: sourceSolrCollection,sortCriteria: "relevancy",firstResult: 0,numberOfResults: batchSize};
-			//console.wslog(tSourceSolrPath);
+			console.wslog({type: "utf8",username,utf8data: "solr path: " + tSourceSolrPath});
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: sourceSolrPath,method: 'POST',headers: {'Content-Type': 'application/json'}}, tCallback);
-			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+			t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 			t.write(JSON.stringify(payload));
 			t.end();
 		}
 		else if( sourceMode == 'FUSION' ){
 			let tSourceSolrPath  = sourceSolrPath + "q=" + queryStr;
-			console.wslog("solr path",tSourceSolrPath);
+			console.wslog({type: "utf8",username,utf8data: "solr path: " + tSourceSolrPath});
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: headers}, tCallback);
-			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+			t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 			t.end();
 		}
 		else {
 			let tSourceSolrPath  = sourceSolrPath + "q=title_txt:" + queryStr;
-			console.wslog("solr path",tSourceSolrPath);
+			console.wslog({type: "utf8",username,utf8data: "solr path: " + tSourceSolrPath});
 			let headers = {'Content-Type': 'application/json'};
 			if (sourceSolrAuthKey)
 				headers["Authorization"] = "Basic " + sourceSolrAuthKey;
 			let t = (sourceSSLMode ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: sourceSolrHost,port: sourceSolrPort,path: tSourceSolrPath,method: 'GET',headers: headers}, tCallback);
-			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+			t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 			t.end();
 		}         
 	}
@@ -313,12 +313,12 @@ function(oCommandLine){
 		let tCallback = validateCallback.bind({ctx});
 		
 		let tValidateSolrPath = validateSolrPath + "&cursorMark=" + cursorMark;
-		console.wslog("SEARCHURL",tValidateSolrPath);
+		console.wslog({type: "utf8",username,utf8data: "solr path: " + tValidateSolrPath});
 		let headers = {'Content-Type': 'application/json'};
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
 		let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'GET',headers: headers}, tCallback);
-		t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+		t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 		t.end();
 	}
 
@@ -331,7 +331,7 @@ function(oCommandLine){
 			if (commandLine.AUTHKEY)
 				headers["Authorization"] = "Basic " + commandLine.AUTHKEY;
 			let t = (CONTEXT.HTTPSSOLR ? CONTEXT.lib.https : CONTEXT.lib.http).request({hostname: validateSolrHost,port: validateSolrPort,path: tValidateSolrPath,method: 'POST',headers: headers}, tCallback);
-			t.on('error', function(e) {console.wslog("Got error: " + e.message);});
+			t.on('error', function(e) {console.wslog({type: "utf8",username,utf8data: "Got error: " + e.message});});
 			t.write(JSON.stringify(payload));
 			t.end();
 		}
@@ -344,11 +344,11 @@ function(oCommandLine){
 	function doCommit(){
 
 		if( commandLine.callback ){
-			console.wslog("do complete callback");
+			console.wslog({type: "utf8",username,utf8data: "do complete callback"});
 			commandLine.callback();
 		}
 		else {
-			console.wslog("do complete commit");
+			console.wslog({type: "utf8",username,utf8data: "do complete commit"});
 			let tCallback = callback.bind({});
 			let t = http.get({host: validateSolrHost,port: validateSolrPort,path: validateSolrUpdatePath + "?commit=true"}, tCallback);
 		}
@@ -364,9 +364,9 @@ function(oCommandLine){
 	function startWork(oCommandLine){
 
 		let doFinally = function(){
-					console.wslog("do finally");
+					console.wslog({type: "utf8",username,utf8data: "do finally"});
 			let finalCB = function(){
-				console.wslog("finally done");
+				console.wslog({type: "utf8",username,utf8data: "finally done"});
 
 				if( oCommandLine.callback ) oCommandLine.callback(oCommandLine.resultContext);
 			}

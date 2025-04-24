@@ -306,16 +306,36 @@ if (LEADER) {
 
 function parseCookies(request) {
 	let list = {},
-		rc = request.headers.cookie;
-
-	rc && rc.split(';').forEach(function (cookie) {
-		let parts = cookie.split('=');
-		let value = parts.length > 1 ? parts[1] : "";
-		if( value && value != 'undefined' )
-			list[parts[0]] = value;
-	});
+		rc = request?.headers?.cookie;
+	if( rc ){
+		rc.split(';').forEach(function (cookie) {
+			let parts = cookie.split('=');
+			let value = parts.length > 1 ? parts[1] : "";
+			if( value && value != 'undefined' )
+				list[parts[0]] = value;
+		});
+	}
+	else if( request.cookies ) {
+		rc = request.cookies;
+		rc.forEach(function (cookie) {
+			let name = cookie.name;
+			let value = cookie.value;
+			if( value && value != 'undefined' )
+				list[name] = value;
+		});
+	}
 
 	return list;
+}
+
+function checkHasAuth(request){
+	let result = "";
+	let cookieObj = parseCookies(request);
+	if ( cookieObj.zen || CONTEXT.IGNORELOGIN ) {
+		result = cookieObj.zen;
+	}
+
+	return( result );
 }
 
 function fileUnderRoot(context,fileName){
@@ -452,7 +472,7 @@ function actualHandleRequest(request, response, bodyData) {
 		result.contenttype = contentType;
 		response.end(JSON.stringify(result));
 	}
-	else if (pathname === '/restservice') {
+	else if (pathname === '/restservice' && checkHasAuth(request) ) {
 		//handle auth request
 		if (cookieObj.zen || IGNORELOGIN ) {
 			queryObj._username = cookieObj.zen;
@@ -566,14 +586,22 @@ let logMultiplexer = {
 	deregister: function (key) {
 		delete logMultiplexer.sockets[key];
 	},
-	notify: function (message) {
+	notify: function (rec) {
+		let message = false;
+
 		for (let c in logMultiplexer.sockets) {
-			try {
-				logMultiplexer.sockets[c].sendUTF(message);
-			}
-			catch (e) {
-				if (DEBUG > 0) console.log(e);
-				logMultiplexer.deregister(c);
+			let parts = c.split("-");
+
+			if( (parts[0] == '*' || parts[0] == rec.username_s ) ){
+				if( !message )
+					message = JSON.stringify(rec);
+				try {
+					logMultiplexer.sockets[c].sendUTF(message);
+				}
+				catch (e) {
+					if (CONTEXT.DEBUG > 0) console.log(e);
+					logMultiplexer.deregister(c);
+				}
 			}
 		}
 	}
@@ -596,53 +624,55 @@ function clearLogQueue() {
 clearLogQueue();
 
 
-console.wslog = function () {
-	if (DEBUG > 1) console.log(arguments);
-	messageQueue.push(JSON.stringify(arguments));
-
-	//logMultiplexer.notify(JSON.stringify(arguments));
-	/*for( let a in arguments){
-		//
-		if( typeof(arguments[a]) == 'object' ){
-			let tVal = JSON.stringify(arguments[a]);
-			if( DEBUG > 1 ) process.stdout.write(tVal + '\n');
-			logMultiplexer.notify(tVal);
-		}
-		else {
-			if( DEBUG > 1 ) process.stdout.write(arguments[a] + '\n');
-			logMultiplexer.notify(arguments[a]);
-		}
-	}*/
+console.wslog = function (rec) {
+	if (CONTEXT.DEBUG > 1) console.log(arguments);
+	logMultiplexer.notify(rec);
 };
 
 wsServer.on('request', function (request) {
+	let requestUrl = request.resourceURL;
+	console.log(requestUrl.query);
+	let username = "";
 	if (!originIsAllowed(request.origin)) {
 		// Make sure we only accept requests from an allowed origin
 		request.reject();
-		if (DEBUG > 1) console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+		if (CONTEXT.DEBUG > 1) console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
 		return;
 	}
-	if (DEBUG > 1) console.log('brequest', request);
-	let key = "harcor";
-	let connection = request.accept('echo-protocol', request.origin);
+	else if( (username = checkHasAuth(request)) ){
+		if (CONTEXT.DEBUG > 1) console.log('brequest', requestUrl.query);
+		let key = requestUrl?.query?.key ? requestUrl.query.key : username;
+		key += "-" + request.origin;
 
-	if (DEBUG > 1) console.log((new Date()) + ' Connection accepted.');
+		var connection = request.accept('echo-protocol', request.origin);
 
-	logMultiplexer.register(key, connection);
+		if (CONTEXT.DEBUG > 1) console.log((new Date()) + ' Connection accepted.');
 
-	connection.on('message', function (message) {
-		if (message.type === 'utf8') {
-			if (DEBUG > 1) console.log('Received Message: ' + message.utf8Data);
-			connection.sendUTF(message.utf8Data);
-		}
-		else if (message.type === 'binary') {
-			if (DEBUG > 1) console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-			connection.sendBytes(message.binaryData);
-		}
-	});
-	connection.on('close', function (reasonCode, description) {
-		if (DEBUG > 1) console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-	});
+		connection["_socketkey"] = key;
+
+		logMultiplexer.register(key, connection);
+
+		connection.on('message', function (message) {
+			if (message.type === 'utf8') {
+				if (CONTEXT.DEBUG > 1) console.log('Received Message: ' + message.utf8Data);
+				connection.sendUTF(message.utf8Data);
+			}
+			else if (message.type === 'binary') {
+				if (CONTEXT.DEBUG > 1) console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+				connection.sendBytes(message.binaryData);
+			}
+		});
+		connection.on('close', function (reasonCode, description) {
+			if (CONTEXT.DEBUG > 1) console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+			logMultiplexer.deregister(this.key);
+		}.bind({key}));
+	}
+	else  {
+		// Make sure we only accept requests from an allowed origin
+		request.reject();
+		if (CONTEXT.DEBUG > 1) console.log((new Date()) + 'unauthorized amd rejected.');
+		return;
+	}
 });
 
 ///solr/validate/select?facet.field=contenttype&facet=on&fq=testname%3Aorder_product_en&q=*%3A*&rows=0

@@ -194,7 +194,7 @@ function(commandLine){
     }
     
     function sendToSolr(callback){
-        console.wslog(rowList);
+        console.wslog({type: "utf8",username,utf8data: JSON.stringify(rowList)});
         if( doWork ){
         let tCallback = callback.bind({});
         let conf = {hostname: solrHost,port: solrPort,path: solrPath,method: 'POST',headers: {'Content-Type': 'application/json'}};

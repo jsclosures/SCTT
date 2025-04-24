@@ -71,7 +71,8 @@ function(commandLine){
                             cursorMark = data.nextCursorMark;
                         }
                         else {
-                            console.wslog("complete");
+						console.wslog({type: "utf8",username,utf8data: "complete"});
+            
                         }
                     }
     
@@ -97,10 +98,10 @@ function(commandLine){
             });
     
       res.on('end', function () {
-            console.wslog(queryDoc.id,"UPDATE",str);
-            console.wslog("checking query count",queryCount);
+            console.wslog({type: "utf8",username,utf8data: queryDoc.id + " UPDATE " + str});
+            console.wslog({type: "utf8",username,utf8data: "checking query count " + queryCount});
             if( queryCount <= 0 ) {
-                console.wslog("call load sybc",hasMore);
+                console.wslog({type: "utf8",username,utf8data: "call load sybc " + hasMore});
             }
             loopResults.bind({ctx,hasMore})();
       });

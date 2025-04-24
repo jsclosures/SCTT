@@ -58,7 +58,7 @@ function(commandLine){
                             cursorMark = data.nextCursorMark;
                         }
                         else {
-                            console.wslog("complete");
+                            console.wslog({type: "utf8",username,utf8data: "complete"});
                         }
                     }
     
@@ -73,10 +73,10 @@ function(commandLine){
         let hasMore = this.hasMore;
         let ctx = this.ctx;
     
-        console.wslog(queryDoc.id,"CB");
-        console.wslog("checking query count",queryCount);
+        console.wslog({type: "utf8",username,utf8data: queryDoc.id + " CB"});
+        console.wslog({type: "utf8",username,utf8data: "checking query count "+queryCount});
         if( queryCount <= 0 ) {
-            console.wslog("call load sybc",hasMore);
+            console.wslog({type: "utf8",username,utf8data: "call load sybc "+ hasMore});
         }
         loopResults.bind({ctx,hasMore})();
     }
