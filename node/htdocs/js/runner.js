@@ -55,6 +55,7 @@ var context = {};
     context.showGrid = false;
     context.integrateGrid = false;
     context.saveLabel = uiManager.getString("runScript");
+    context.deleteLabel = uiManager.getString("resetConnection");
     context.exportLabel = uiManager.getString("deleteAllTestData");
     context.formCustomClass = "crudForm";
     context.autoQuery = false;
@@ -312,6 +313,19 @@ var context = {};
         else {
             showAlertMessageDialog(uiManager.getString("runnerUnableToRun"));
         }
+    };
+
+    context.deleteAction = function(e,oldRec,newRec)
+    {
+        //console.log('save: ' + newRec.channelid_s);
+            setBusy(true,uiManager.getString("pleaseWait"));
+
+            let tObj = dijit.byId(mainId + "output");
+            tObj.attr("value",'restarting\n');
+
+            startMessageService({username: getCurrentContext().SessionManager.getAttribute("userId"),callback: messageUpdateCallback});
+
+            setBusy();
     };
 
     context.customAction = function(e,oldRec,newRec)

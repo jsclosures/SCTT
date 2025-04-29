@@ -44,7 +44,7 @@ const mimeType = {
 let PORT = 8180;
 let SOLRHOST = "localhost";
 let SOLRPORT = 8983;
-let SOLRCOLLECTION = "validate";
+let SOLRCOLLECTION = "validatelatest";
 let DOCUMENTROOT = "./";
 let DEBUG = 0;
 let AUTHKEY = "";
@@ -59,7 +59,7 @@ let HTTPSSOLR = false;
 let SOLRPREFIX = "/solr/";
 let IGNORESSLCHECK = true;
 let IGNORELOGIN = false;
-let USERSPECIFIC = false;
+let USERSPECIFIC = true;
 
 let commandLine = {};
 
@@ -592,7 +592,7 @@ let logMultiplexer = {
 		for (let c in logMultiplexer.sockets) {
 			let parts = c.split("-");
 
-			if( (parts[0] == '*' || parts[0] == rec.username_s ) ){
+			if( (parts[0] == '*' || parts[0] == '' || parts[0] == rec.username ) ){
 				if( !message )
 					message = JSON.stringify(rec);
 				try {

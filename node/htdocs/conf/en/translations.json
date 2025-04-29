@@ -128,7 +128,8 @@
         "rowcountb": "Pre",
         "rowcount": "Delta",
         "clearSummary": "Clear",
-        "downloadTest": "Download"
+        "downloadTest": "Download",
+        "resetConnection": "Reconnect"
 },
 "help": {
     "login": "Please use your username and password to login.",

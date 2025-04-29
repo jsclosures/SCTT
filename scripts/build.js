@@ -111,7 +111,9 @@ function(commandLine){
     
     var rl = false;
     
-    if( csvData ){
+    if( csvData || !CONTEXT.lib.fs.existsSync(inFileName) ){
+        if( !csvData )
+            csvData = "";
         const instream = new CONTEXT.lib.stream.PassThrough()
         instream.write(csvData);
         instream.end();
