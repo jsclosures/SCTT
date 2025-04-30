@@ -309,7 +309,7 @@ function parseCookies(request) {
 		rc = request?.headers?.cookie;
 	if( rc ){
 		rc.split(';').forEach(function (cookie) {
-			let parts = cookie.split('=');
+			let parts = cookie.trim().split('=');
 			let value = parts.length > 1 ? parts[1] : "";
 			if( value && value != 'undefined' )
 				list[parts[0]] = value;
