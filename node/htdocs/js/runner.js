@@ -15,6 +15,7 @@ function buildRunnerPage(parentId,pageId) {
 						"dijit/form/SimpleTextarea",
                         "dijit/form/ValidationTextBox",
                         "dijit/form/Button",
+                        "dijit/form/CheckBox",
                         "dijit/form/FilteringSelect",
 						"dojox/grid/EnhancedGrid",
                         "dojox/grid/enhanced/plugins/IndirectSelection",
@@ -63,13 +64,22 @@ var context = {};
     context.customLabel = uiManager.getString("clearMessages");
     
     var typeStoreData = {
-        identifier : 'abbr', label : 'name', items : [
-    {abbr : "testbuildscript", name : uiManager.getString('testbuildscript')},
-	{abbr : "testharvestscript", name : uiManager.getString('testharvestscript')},
-	{abbr : "testcopyscript", name : uiManager.getString('testcopyscript')},
-	{abbr : "testextractscript", name : uiManager.getString('testextractscript')},
-	{abbr : "testsummaryscript", name : uiManager.getString('testsummaryscript')}]
+        identifier : 'abbr', label : 'name', items : []
     };
+
+    var scriptList = uiManager.getSetting("scriptList");
+    if( scriptList ){
+        for(let script of scriptList){
+            typeStoreData.items.push({abbr : "test" + script + "script", name : uiManager.getString("test" + script +"script")});
+        }
+    }
+    else {
+        typeStoreData.items.push({abbr : "testbuildscript", name : uiManager.getString('testbuildscript')});
+        typeStoreData.items.push({abbr : "testharvestscript", name : uiManager.getString('testharvestscript')});
+        typeStoreData.items.push({abbr : "testcopyscript", name : uiManager.getString('testcopyscript')});
+        typeStoreData.items.push({abbr : "testextractscript", name : uiManager.getString('testextractscript')});
+        typeStoreData.items.push({abbr : "testsummaryscript", name : uiManager.getString('testsummaryscript')});
+    }
 
     var typeStore = new dojo.data.ItemFileReadStore( {
         data : typeStoreData
@@ -323,7 +333,7 @@ var context = {};
             let tObj = dijit.byId(mainId + "output");
             tObj.attr("value",'restarting\n');
 
-            startMessageService({username: getCurrentContext().SessionManager.getAttribute("userId"),callback: messageUpdateCallback});
+            startMessageService({username: getCurrentContext().SessionManager.getAttribute("userId"),callback:  messageUpdateCallback.bind({autoClearResponse})});
 
             setBusy();
     };
@@ -333,6 +343,14 @@ var context = {};
         let tObj = dijit.byId(mainId + "output");
         tObj.attr("value",'');
     };
+
+    context.checkBoxButtonLabel = uiManager.getString("autoClear");
+    let autoClearResponse = {state: true};
+
+    context.checkBoxButtonAction = function(state)
+    {
+        this.autoClearResponse.state = state;
+    }.bind({autoClearResponse});
 
     context.exportAction = function(e,oldRec,newRec)
     {
@@ -372,7 +390,7 @@ var context = {};
        
     }
 	
-    buildForm(context);
+    let generatorContext = buildForm(context);
 
 
     let messageField = new dijit.form.SimpleTextarea({
@@ -390,13 +408,13 @@ var context = {};
         let tObj = dijit.byId(mainId + "output");
         let content = tObj.attr("value");
 
-        if( content && content.length > 2048 )
+        if( this.autoClearResponse.state && content && content.length > 2048 )
             content = '';
             
         tObj.attr("value",message + "\n" + content);
     }
 
-    startMessageService({username: getCurrentContext().SessionManager.getAttribute("userId"),callback: messageUpdateCallback});
+    startMessageService({username: getCurrentContext().SessionManager.getAttribute("userId"),callback: messageUpdateCallback.bind({autoClearResponse})});
     
     var fObj = anyWidgetById(mainId);
         //console.log("main obj " + fObj);
