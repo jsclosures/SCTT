@@ -71,6 +71,9 @@ linux
   http://localhost:8983/solr/valdiate/schema
 
 
+docker build -t sctt:v1 .
+docker run -p 8180:8180 sctt:v1 -e ""
+
 HarCor Technologies, Inc
 
 
