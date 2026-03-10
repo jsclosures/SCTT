@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Customer Records – CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/customers.css" />
+</head>
+<body>
+
+<!-- ── Navigation bar ─────────────────────────────────────────────── -->
+<nav class="crm-nav" role="navigation" aria-label="Main navigation">
+  <a class="crm-nav-brand" href="customers.html">
+    <!-- People icon -->
+    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+         viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    Customer CRM
+  </a>
+</nav>
+
+<!-- ── List view ──────────────────────────────────────────────────── -->
+<main class="crm-container">
+
+  <div id="view-list">
+    <div class="crm-page-header">
+      <div>
+        <h1 class="crm-page-title">Customers</h1>
+        <p class="crm-page-subtitle"><span id="total-count">0</span> records</p>
+      </div>
+      <button class="btn btn-primary" id="btn-new-customer" type="button">
+        <!-- Plus icon -->
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+             viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Customer
+      </button>
+    </div>
+
+    <div class="crm-card">
+      <div class="table-responsive">
+        <table class="crm-table" aria-label="Customer records">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Address</th>
+              <th scope="col">Phone</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customer-tbody">
+            <tr><td colspan="4" class="crm-spinner">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Detail view ──────────────────────────────────────────────── -->
+  <div id="view-detail">
+    <div class="crm-page-header">
+      <button class="btn btn-secondary" id="btn-back" type="button">
+        <!-- Chevron left icon -->
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+             viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back to Customers
+      </button>
+    </div>
+
+    <div class="crm-card crm-detail-card">
+      <!-- Header band -->
+      <div class="crm-detail-header">
+        <div class="crm-avatar" id="detail-avatar" aria-hidden="true">?</div>
+        <div class="crm-detail-header-info">
+          <h2 id="detail-name">—</h2>
+          <p id="detail-id"></p>
+        </div>
+      </div>
+
+      <!-- Field grid -->
+      <div class="crm-detail-body">
+        <div class="crm-field-grid">
+          <div class="crm-field">
+            <span class="crm-field-label">Full Name</span>
+            <span class="crm-field-value" id="detail-field-name">—</span>
+          </div>
+          <div class="crm-field">
+            <span class="crm-field-label">Phone</span>
+            <span class="crm-field-value" id="detail-field-phone">—</span>
+          </div>
+          <div class="crm-field" style="grid-column: 1 / -1;">
+            <span class="crm-field-label">Address</span>
+            <span class="crm-field-value" id="detail-field-address">—</span>
+          </div>
+          <div class="crm-field">
+            <span class="crm-field-label">Created</span>
+            <span class="crm-field-value" id="detail-field-created">—</span>
+          </div>
+          <div class="crm-field">
+            <span class="crm-field-label">Last Updated</span>
+            <span class="crm-field-value" id="detail-field-updated">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action bar -->
+      <div class="crm-detail-actions">
+        <button class="btn btn-primary" id="btn-edit-detail" type="button">Edit</button>
+        <button class="btn btn-danger"  id="btn-delete-detail" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Create / Edit modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">New Customer</h2>
+      <button class="modal-close" id="modal-close" type="button" aria-label="Close dialog">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="form-name">
+          Name <span class="required" aria-hidden="true">*</span>
+        </label>
+        <input class="form-control" id="form-name" type="text"
+               placeholder="Company or individual name"
+               maxlength="255" autocomplete="off" />
+        <span class="form-error" id="form-name-error" role="alert">Name is required.</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="form-address">Address</label>
+        <textarea class="form-control" id="form-address" rows="3"
+                  placeholder="Street, City, State, ZIP"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="form-phone">Phone</label>
+        <input class="form-control" id="form-phone" type="tel"
+               placeholder="(555) 000-0000" maxlength="50" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-modal-cancel" type="button">Cancel</button>
+      <button class="btn btn-primary"   id="form-save-btn"    type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast notification ──────────────────────────────────────────── -->
+<div class="crm-toast" id="crm-toast" role="status" aria-live="polite"></div>
+
+<script src="js/customers.js"></script>
+</body>
+</html>
