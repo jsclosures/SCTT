@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign In – Customer CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8F9FA;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #212529;
+}
+.login-card {
+  background: #fff;
+  border: 1px solid #DEE2E6;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  width: 100%;
+  max-width: 400px;
+  margin: 24px;
+  overflow: hidden;
+}
+.login-header {
+  background: #0066CC;
+  color: #fff;
+  padding: 28px 32px 24px;
+  text-align: center;
+}
+.login-header svg { margin-bottom: 8px; }
+.login-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.login-header p {
+  margin: 4px 0 0;
+  opacity: .85;
+  font-size: 13px;
+}
+.login-body { padding: 28px 32px; }
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: #adb5bd;
+  font-size: 12px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #DEE2E6;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color .15s;
+}
+.btn-sso {
+  background: #0066CC;
+  color: #fff;
+  border-color: #0066CC;
+  margin-bottom: 12px;
+}
+.btn-sso:hover { background: #0052a3; border-color: #0052a3; }
+.btn-sso.disabled {
+  background: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+.btn-local {
+  background: #fff;
+  color: #212529;
+  border-color: #DEE2E6;
+}
+.btn-local:hover { background: #F8F9FA; }
+.sso-note {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+.sso-note a { color: #0066CC; }
+.alert {
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid;
+}
+.alert-warning {
+  background: #fff3cd;
+  border-color: #ffc107;
+  color: #664d03;
+}
+/* SSO status badge */
+.sso-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.sso-badge.available {
+  background: #d4edda;
+  color: #155724;
+}
+.sso-badge.unavailable {
+  background: #f8d7da;
+  color: #721c24;
+}
+</style>
+</head>
+<body>
+
+<div class="login-card" role="main">
+  <div class="login-header">
+    <!-- People icon -->
+    <svg width="36" height="36" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.5"
+         viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <h1>Customer CRM</h1>
+    <p>Sign in to your account</p>
+  </div>
+
+  <div class="login-body">
+    <!-- SSO availability badge – populated by JS -->
+    <div id="sso-status"></div>
+
+    <!-- SSO login -->
+    <a id="btn-sso-login" class="btn btn-sso disabled" href="/saml/login" aria-disabled="true">
+      <!-- Key icon -->
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+      </svg>
+      Sign in with SSO
+    </a>
+
+    <div class="divider">or</div>
+
+    <!-- Link to legacy username/password login -->
+    <a class="btn btn-local" href="index.html">
+      <!-- User icon -->
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Sign in with username &amp; password
+    </a>
+
+    <p class="sso-note" id="sso-note">
+      SSO status is being checked&hellip;
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var btnSso    = document.getElementById('btn-sso-login');
+  var ssoStatus = document.getElementById('sso-status');
+  var ssoNote   = document.getElementById('sso-note');
+
+  // Check whether SAML SSO is available on this server
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/saml/metadata');
+  xhr.timeout = 4000;
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState !== 4) return;
+
+    if (xhr.status === 200 && xhr.responseText.indexOf('<EntityDescriptor') !== -1) {
+      // SSO is configured – enable the button
+      btnSso.classList.remove('disabled');
+      btnSso.removeAttribute('aria-disabled');
+
+      ssoStatus.innerHTML =
+        '<div style="text-align:center"><span class="sso-badge available">' +
+        '&#10003; SSO Available</span></div>';
+
+      ssoNote.innerHTML =
+        'Your organisation uses Single Sign-On. Clicking <em>Sign in with SSO</em> ' +
+        'will redirect you to your Identity Provider.';
+    } else {
+      // SSO not configured
+      ssoStatus.innerHTML =
+        '<div style="text-align:center"><span class="sso-badge unavailable">' +
+        'SSO Not Configured</span></div>';
+
+      ssoNote.innerHTML =
+        'SAML SSO is not configured on this server. Set SAML_IDP_SSO_URL and SAML_IDP_CERT environment variables. ' +
+        '<a href="/saml/metadata">View SP metadata</a>.';
+    }
+  };
+  xhr.onerror   = xhr.ontimeout = function () {
+    ssoNote.textContent = 'Could not determine SSO availability.';
+  };
+  xhr.send();
+}());
+</script>
+</body>
+</html>

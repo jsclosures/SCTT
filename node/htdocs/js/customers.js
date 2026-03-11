@@ -323,4 +323,39 @@
 
     /* ── Init ───────────────────────────────────────────────────────── */
     loadCustomers();
+
+    /* ── Nav-bar auth status (SSO-aware) ────────────────────────────── */
+    (function populateNavAuth() {
+        var navAuth = document.getElementById('crm-nav-auth');
+        if (!navAuth) return;
+
+        // Check whether SAML SSO is available
+        var xhrSso = new XMLHttpRequest();
+        xhrSso.open('GET', '/saml/metadata');
+        xhrSso.timeout = 3000;
+        xhrSso.onreadystatechange = function () {
+            if (xhrSso.readyState !== 4) return;
+            var ssoAvailable = xhrSso.status === 200 &&
+                               xhrSso.responseText.indexOf('<EntityDescriptor') !== -1;
+            var html = '';
+            if (ssoAvailable) {
+                html += '<a href="/saml/login" style="color:#fff;text-decoration:none;' +
+                        'display:inline-flex;align-items:center;gap:6px;' +
+                        'padding:5px 12px;border:1px solid rgba(255,255,255,.4);' +
+                        'border-radius:4px;font-weight:500;">' +
+                        '<svg width="14" height="14" fill="none" stroke="currentColor" ' +
+                        'stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">' +
+                        '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>' +
+                        '</svg>Sign in with SSO</a>';
+            }
+            html += '<a href="/login.html" style="color:rgba(255,255,255,.75);' +
+                    'text-decoration:none;font-size:12px;">Sign in</a>';
+            navAuth.innerHTML = html;
+        };
+        xhrSso.onerror = xhrSso.ontimeout = function () {
+            navAuth.innerHTML = '<a href="/login.html" style="color:rgba(255,255,255,.75);' +
+                                'text-decoration:none;font-size:12px;">Sign in</a>';
+        };
+        xhrSso.send();
+    }());
 }());

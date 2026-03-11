@@ -32,6 +32,12 @@ services:
       DB_NAME: sctt
       DB_USER: sctt
       DB_PASSWORD: sctt
+      # ── SAML SSO (set to enable; leave empty to disable) ──────────────
+      # SAML_IDP_SSO_URL: https://your-idp.example.com/sso/saml
+      # SAML_IDP_ENTITY_ID: https://your-idp.example.com
+      # SAML_IDP_CERT: <PEM cert>
+      # SAML_SP_ENTITY_ID: http://localhost:8180/saml/metadata
+      # SAML_SP_ACS_URL: http://localhost:8180/saml/acs
     depends_on:
       db:
         condition: service_healthy

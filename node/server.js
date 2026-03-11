@@ -15,7 +15,8 @@ const Buffer = require("buffer").Buffer;
 const getHandlers = require("./handlers.js").getHandlers;
 const HANDLERS = getHandlers();
 
-const db = require("./db.js");
+const db   = require("./db.js");
+const saml = require("./saml.js");
 
 /*var nock = require('nock');
 
@@ -360,6 +361,97 @@ function parseCustomerId(raw) {
 }
 
 /**
+ * SAML SSO route handler.
+ *
+ * GET  /saml/metadata  – serve SP metadata XML for IdP registration
+ * GET  /saml/login     – initiate SP-initiated SSO (redirect to IdP)
+ * POST /saml/acs       – Assertion Consumer Service (receive IdP response,
+ *                        validate assertion, establish session, redirect)
+ */
+function handleSamlRequest(request, response, pathname, bodyData) {
+	function samlNotConfigured() {
+		response.writeHead(503, { 'Content-Type': 'application/json' });
+		response.end(JSON.stringify({
+			status: 0,
+			message: 'SAML SSO is not configured on this server. ' +
+			         'Set SAML_IDP_SSO_URL and SAML_IDP_CERT environment variables.'
+		}));
+	}
+
+	if (pathname === '/saml/metadata') {
+		const xml = saml.getMetadataXml();
+		if (!xml) { samlNotConfigured(); return; }
+		response.writeHead(200, { 'Content-Type': 'application/xml' });
+		response.end(xml);
+		return;
+	}
+
+	if (pathname === '/saml/login') {
+		if (!saml.isSamlConfigured()) { samlNotConfigured(); return; }
+		saml.getLoginUrl({ RelayState: '/' }).then(function (loginUrl) {
+			if (!loginUrl) { samlNotConfigured(); return; }
+			response.writeHead(302, { Location: loginUrl });
+			response.end();
+		}).catch(function (err) {
+			if (DEBUG > 0) console.error('[SAML] getLoginUrl error', err);
+			response.writeHead(500, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({ status: 0, message: 'SSO initiation failed' }));
+		});
+		return;
+	}
+
+	if (pathname === '/saml/acs') {
+		if (!saml.isSamlConfigured()) { samlNotConfigured(); return; }
+		if (request.method !== 'POST') {
+			response.writeHead(405, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({ status: 0, message: 'Method not allowed' }));
+			return;
+		}
+
+		// bodyData is already parsed from URL-encoded form by handleRequest
+		const postBody = bodyData || {};
+
+		saml.validateAssertion(postBody).then(function (identity) {
+			if (DEBUG > 0) console.log('[SAML] Assertion validated for user:', identity.username);
+
+			// Determine redirect target (from RelayState, fallback to app root)
+			let redirectTarget = '/customers.html';
+			if (postBody.RelayState && typeof postBody.RelayState === 'string') {
+				// Only allow relative redirects to prevent open-redirect attacks
+				let rs = postBody.RelayState.trim();
+				if (rs.startsWith('/') && !rs.startsWith('//')) {
+					redirectTarget = rs;
+				}
+			}
+
+			// Set the session cookie and redirect
+			response.writeHead(302, {
+				'Set-Cookie': 'zen=' + encodeURIComponent(identity.username) +
+				              '; Path=/; HttpOnly; SameSite=Lax',
+				'Location': redirectTarget
+			});
+			response.end();
+		}).catch(function (err) {
+			console.error('[SAML] Assertion validation failed:', err.message);
+			response.writeHead(401, { 'Content-Type': 'text/html' });
+			response.end(
+				'<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+				'<title>SSO Login Failed</title></head><body>' +
+				'<h2>SSO Login Failed</h2>' +
+				'<p>The SAML assertion could not be validated.</p>' +
+				'<p><a href="/saml/login">Try again</a></p>' +
+				'</body></html>'
+			);
+		});
+		return;
+	}
+
+	// Any other /saml/* path → 404
+	response.writeHead(404, { 'Content-Type': 'application/json' });
+	response.end(JSON.stringify({ status: 0, message: 'Not found' }));
+}
+
+/**
  * Handler for all /api/customers routes.
  *
  * GET  /api/customers         - list all customers
@@ -485,7 +577,21 @@ function handleRequest(request, response) {
 		});
 		request.on('end', function () {
 			writeLog(1, 'Body: ' + body)
-			let data = body ? JSON.parse(body) : {};
+			let contentTypeHeader = (request.headers['content-type'] || '').toLowerCase();
+			let data;
+			if (!body) {
+				data = {};
+			} else if (contentTypeHeader.includes('application/x-www-form-urlencoded')) {
+				// SAML ACS POSTs arrive as URL-encoded form data
+				data = Object.fromEntries(new URLSearchParams(body));
+			} else {
+				try { data = JSON.parse(body); } catch (e) {
+					writeLog(1, 'JSON parse error: ' + e.message);
+					response.writeHead(400, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({ status: 0, message: 'Invalid JSON body' }));
+					return;
+				}
+			}
 			actualHandleRequest(request, response, data);
 		});
 	}
@@ -521,6 +627,9 @@ function actualHandleRequest(request, response, bodyData) {
 
 	if (pathname === '/api/customers' || (pathname.lastIndexOf('/api/customers/', 0) === 0)) {
 		handleCustomerRequest(request, response, pathname, bodyData);
+	}
+	else if (pathname === '/saml/metadata' || pathname === '/saml/login' || pathname === '/saml/acs') {
+		handleSamlRequest(request, response, pathname, bodyData);
 	}
 	else if (requestUrl.lastIndexOf('/worker/complete', 0) > -1) {
 
