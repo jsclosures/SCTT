@@ -15,6 +15,9 @@ const Buffer = require("buffer").Buffer;
 const getHandlers = require("./handlers.js").getHandlers;
 const HANDLERS = getHandlers();
 
+const db   = require("./db.js");
+const saml = require("./saml.js");
+
 /*var nock = require('nock');
 
 nock.recorder.rec({
@@ -346,6 +349,224 @@ function fileUnderRoot(context,fileName){
 	return( filePath.startsWith(directoryPath) );
 }
 
+/**
+ * Validate that a customer ID from the URL is a safe positive integer.
+ * Returns the parsed integer or null if invalid.
+ */
+function parseCustomerId(raw) {
+	if (!/^\d+$/.test(raw)) return null;
+	let n = parseInt(raw, 10);
+	if (isNaN(n) || n <= 0) return null;
+	return n;
+}
+
+/**
+ * SAML SSO route handler.
+ *
+ * GET  /saml/metadata  – serve SP metadata XML for IdP registration
+ * GET  /saml/login     – initiate SP-initiated SSO (redirect to IdP)
+ * POST /saml/acs       – Assertion Consumer Service (receive IdP response,
+ *                        validate assertion, establish session, redirect)
+ */
+function handleSamlRequest(request, response, pathname, bodyData) {
+	function samlNotConfigured() {
+		response.writeHead(503, { 'Content-Type': 'application/json' });
+		response.end(JSON.stringify({
+			status: 0,
+			message: 'SAML SSO is not configured on this server. ' +
+			         'Set SAML_IDP_SSO_URL and SAML_IDP_CERT environment variables.'
+		}));
+	}
+
+	if (pathname === '/saml/metadata') {
+		const xml = saml.getMetadataXml();
+		if (!xml) { samlNotConfigured(); return; }
+		response.writeHead(200, { 'Content-Type': 'application/xml' });
+		response.end(xml);
+		return;
+	}
+
+	if (pathname === '/saml/login') {
+		if (!saml.isSamlConfigured()) { samlNotConfigured(); return; }
+		saml.getLoginUrl({ RelayState: '/' }).then(function (loginUrl) {
+			if (!loginUrl) { samlNotConfigured(); return; }
+			response.writeHead(302, { Location: loginUrl });
+			response.end();
+		}).catch(function (err) {
+			if (DEBUG > 0) console.error('[SAML] getLoginUrl error', err);
+			response.writeHead(500, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({ status: 0, message: 'SSO initiation failed' }));
+		});
+		return;
+	}
+
+	if (pathname === '/saml/acs') {
+		if (!saml.isSamlConfigured()) { samlNotConfigured(); return; }
+		if (request.method !== 'POST') {
+			response.writeHead(405, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({ status: 0, message: 'Method not allowed' }));
+			return;
+		}
+
+		// bodyData is already parsed from URL-encoded form by handleRequest
+		const postBody = bodyData || {};
+
+		saml.validateAssertion(postBody).then(function (identity) {
+			if (DEBUG > 0) console.log('[SAML] Assertion validated for user:', identity.username);
+
+			// Determine redirect target (from RelayState, fallback to app root)
+			let redirectTarget = '/customers.html';
+			if (postBody.RelayState && typeof postBody.RelayState === 'string') {
+				// Only allow relative redirects to prevent open-redirect attacks
+				let rs = postBody.RelayState.trim();
+				if (rs.startsWith('/') && !rs.startsWith('//')) {
+					redirectTarget = rs;
+				}
+			}
+
+			// Set the session cookie and redirect
+			response.writeHead(302, {
+				'Set-Cookie': 'zen=' + encodeURIComponent(identity.username) +
+				              '; Path=/; HttpOnly; SameSite=Lax',
+				'Location': redirectTarget
+			});
+			response.end();
+		}).catch(function (err) {
+			console.error('[SAML] Assertion validation failed:', err.message);
+			response.writeHead(401, { 'Content-Type': 'text/html' });
+			response.end(
+				'<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+				'<title>SSO Login Failed</title></head><body>' +
+				'<h2>SSO Login Failed</h2>' +
+				'<p>The SAML assertion could not be validated.</p>' +
+				'<p><a href="/saml/login">Try again</a></p>' +
+				'</body></html>'
+			);
+		});
+		return;
+	}
+
+	// Any other /saml/* path → 404
+	response.writeHead(404, { 'Content-Type': 'application/json' });
+	response.end(JSON.stringify({ status: 0, message: 'Not found' }));
+}
+
+/**
+ * Handler for all /api/customers routes.
+ *
+ * GET  /api/customers         - list all customers
+ * GET  /api/customers/:id     - get single customer
+ * POST /api/customers         - create customer   (requires auth)
+ * PUT  /api/customers/:id     - update customer   (requires auth)
+ * DELETE /api/customers/:id   - delete customer   (requires auth)
+ */
+function handleCustomerRequest(request, response, pathname, bodyData) {
+	let method = request.method.toUpperCase();
+
+	// Extract optional :id segment
+	let idSegment = pathname.replace('/api/customers', '').replace(/^\//, '');
+	let customerId = idSegment ? parseCustomerId(idSegment) : null;
+
+	// If an id segment was provided but invalid, reject immediately
+	if (idSegment && customerId === null) {
+		response.writeHead(400, { 'Content-Type': 'application/json' });
+		response.end(JSON.stringify({ status: 0, message: 'Invalid customer id' }));
+		return;
+	}
+
+	function sendJSON(statusCode, payload) {
+		response.writeHead(statusCode, { 'Content-Type': 'application/json' });
+		response.end(JSON.stringify(payload));
+	}
+
+	// GET requests do not require auth
+	if (method === 'GET') {
+		if (customerId) {
+			db.getCustomer(customerId).then(function (customer) {
+				if (!customer) {
+					sendJSON(404, { status: 0, message: 'Customer not found' });
+				} else {
+					sendJSON(200, { status: 1, customer: customer });
+				}
+			}).catch(function (err) {
+				if (DEBUG > 0) console.error('getCustomer error', err);
+				sendJSON(500, { status: 0, message: 'Internal server error' });
+			});
+		} else {
+			db.listCustomers().then(function (customers) {
+				sendJSON(200, { status: 1, customers: customers, totalCount: customers.length });
+			}).catch(function (err) {
+				if (DEBUG > 0) console.error('listCustomers error', err);
+				sendJSON(500, { status: 0, message: 'Internal server error' });
+			});
+		}
+		return;
+	}
+
+	// Mutating operations require authentication
+	if (!checkHasAuth(request)) {
+		sendJSON(401, { status: 0, message: 'Unauthorized' });
+		return;
+	}
+
+	if (method === 'POST' && !customerId) {
+		// Create
+		let name    = bodyData && typeof bodyData.name    === 'string' ? bodyData.name.trim()    : '';
+		let address = bodyData && typeof bodyData.address === 'string' ? bodyData.address.trim() : '';
+		let phone   = bodyData && typeof bodyData.phone   === 'string' ? bodyData.phone.trim()   : '';
+
+		if (!name) {
+			sendJSON(400, { status: 0, message: 'name is required' });
+			return;
+		}
+
+		db.createCustomer(name, address, phone).then(function (customer) {
+			sendJSON(201, { status: 1, customer: customer });
+		}).catch(function (err) {
+			if (DEBUG > 0) console.error('createCustomer error', err);
+			sendJSON(500, { status: 0, message: 'Internal server error' });
+		});
+
+	} else if (method === 'PUT' && customerId) {
+		// Update
+		let name    = bodyData && typeof bodyData.name    === 'string' ? bodyData.name.trim()    : '';
+		let address = bodyData && typeof bodyData.address === 'string' ? bodyData.address.trim() : '';
+		let phone   = bodyData && typeof bodyData.phone   === 'string' ? bodyData.phone.trim()   : '';
+
+		if (!name) {
+			sendJSON(400, { status: 0, message: 'name is required' });
+			return;
+		}
+
+		db.updateCustomer(customerId, name, address, phone).then(function (customer) {
+			if (!customer) {
+				sendJSON(404, { status: 0, message: 'Customer not found' });
+			} else {
+				sendJSON(200, { status: 1, customer: customer });
+			}
+		}).catch(function (err) {
+			if (DEBUG > 0) console.error('updateCustomer error', err);
+			sendJSON(500, { status: 0, message: 'Internal server error' });
+		});
+
+	} else if (method === 'DELETE' && customerId) {
+		// Delete
+		db.deleteCustomer(customerId).then(function (row) {
+			if (!row) {
+				sendJSON(404, { status: 0, message: 'Customer not found' });
+			} else {
+				sendJSON(200, { status: 1, message: 'Customer deleted' });
+			}
+		}).catch(function (err) {
+			if (DEBUG > 0) console.error('deleteCustomer error', err);
+			sendJSON(500, { status: 0, message: 'Internal server error' });
+		});
+
+	} else {
+		sendJSON(405, { status: 0, message: 'Method not allowed' });
+	}
+}
+
 function handleRequest(request, response) {
 	if (request.method == 'POST' || request.method == 'DELETE' || request.method == 'PUT') {
 		writeLog(1, 'POST')
@@ -356,7 +577,21 @@ function handleRequest(request, response) {
 		});
 		request.on('end', function () {
 			writeLog(1, 'Body: ' + body)
-			let data = body ? JSON.parse(body) : {};
+			let contentTypeHeader = (request.headers['content-type'] || '').toLowerCase();
+			let data;
+			if (!body) {
+				data = {};
+			} else if (contentTypeHeader.includes('application/x-www-form-urlencoded')) {
+				// SAML ACS POSTs arrive as URL-encoded form data
+				data = Object.fromEntries(new URLSearchParams(body));
+			} else {
+				try { data = JSON.parse(body); } catch (e) {
+					writeLog(1, 'JSON parse error: ' + e.message);
+					response.writeHead(400, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({ status: 0, message: 'Invalid JSON body' }));
+					return;
+				}
+			}
 			actualHandleRequest(request, response, data);
 		});
 	}
@@ -390,7 +625,13 @@ function actualHandleRequest(request, response, bodyData) {
 	let pathname = requestObj.pathname;
 	if (DEBUG > 1) console.log(pathname, requestUrl);
 
-	if (requestUrl.lastIndexOf('/worker/complete', 0) > -1) {
+	if (pathname === '/api/customers' || (pathname.lastIndexOf('/api/customers/', 0) === 0)) {
+		handleCustomerRequest(request, response, pathname, bodyData);
+	}
+	else if (pathname === '/saml/metadata' || pathname === '/saml/login' || pathname === '/saml/acs') {
+		handleSamlRequest(request, response, pathname, bodyData);
+	}
+	else if (requestUrl.lastIndexOf('/worker/complete', 0) > -1) {
 
 		workCompleted(requestObj);
 
